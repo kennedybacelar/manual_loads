@@ -6,6 +6,7 @@ from datetime import datetime, date
 
 sys.path.insert(1, '../log')
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
+pd.options.mode.chained_assignment = None
 
 def getting_destination_path():
 
@@ -82,7 +83,7 @@ def declaring_sales_file_final_format():
 def declaring_stock_file_final_format():
 
     stock_file_columns = [
-        'Country', 'Product Code' 'Diageo Customer ID', 'Diageo Customer Name',
+        'Country', 'Product Code', 'Diageo Customer ID', 'Diageo Customer Name',
         'Invoice Date', 'Quantity', 'Unit of measure', 'Warehouse Number', 'Warehouse'
     ]
 
@@ -317,7 +318,6 @@ def filling_sales_information(df_sales, df_dist_names):
         df_sales['temp_country_key'] = df_sales['Country'].str.lower()
         df_sales['temp_dist_key'] = df_sales['Diageo Customer ID']
         df_sales.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
-        df_sales = df_sales[~df_sales.index.duplicated(keep='first')]
 
         #df_dist_names are already set and they are ['Country_key', 'Distributor_id']
         df_dist_names = df_dist_names[~df_dist_names.index.duplicated(keep='first')]
@@ -340,21 +340,19 @@ def filling_sales_information(df_sales, df_dist_names):
 
     #Keeping the dist names and sales with index set - So not needed setting index again
 
+    df_sales.reset_index(drop=True, inplace=True)
     return (True, [df_sales])
 
 
-def filling_stock_information(df_stock, df_dist_names, df_customer_catalogue):
-
+def filling_stock_information(df_stock, df_dist_names):
+    
     try:
-        df_customer_catalogue.set_index(['Distributor_id', 'Store_id'], inplace=True)
-        df_customer_catalogue = df_customer_catalogue[~df_customer_catalogue.index.duplicated(keep='first')]
-
         df_stock['temp_country_key'] = df_stock['Country'].str.lower()
         df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
         df_stock.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
         df_stock = df_stock[~df_stock.index.duplicated(keep='first')]
     except Exception as error:
-        print('{} - Error filling_stock_information'.format(error))
+        print('{} - Error filling_stock_information Cod: 01'.format(error))
         return (False, [])
 
     for single_key_stock in df_stock.index.unique():
@@ -362,21 +360,39 @@ def filling_stock_information(df_stock, df_dist_names, df_customer_catalogue):
             correct_dist_name = df_dist_names.at[(single_key_stock), 'Distributor_name']
             df_stock.loc[(single_key_stock), 'Diageo Customer Name'] = correct_dist_name
         except KeyError as error:
-            print('{} - Distributor not found'.format(error))
+            print('{} - Stock - Distributor not found'.format(error))
         except Exception as error:
-            print('{} - Error filling_stock_information'.format(error))
+            print('{} - Error filling_stock_information Cod: 02'.format(error))
             return (False, [])
-        
+
+    df_stock.reset_index(drop=True, inplace=True)
+    return (True, [df_stock])
+
+
+def getting_stock_store_names(df_stock, df_customer_catalogue):
+
+    try:
+        df_customer_catalogue.set_index(['Country', 'Distributor_id', 'Store_id'], inplace=True)
+        df_customer_catalogue = df_customer_catalogue[~df_customer_catalogue.index.duplicated(keep='first')]
+
+        df_stock['temp_country_key'] = df_stock['Country']
+        df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
+        df_stock['temp_store_id'] = df_stock['Warehouse Number']
+        df_stock.set_index(['temp_country_key', 'temp_dist_key', 'temp_store_id'], inplace=True)
+    except Exception as error:
+        print('{} - Error getting_stock_store_names Cod: 01'.format(error))
+        return (False, [])
+    
+    for individual_stock_key in df_stock.index.unique():
         try:
-            store_name = df_customer_catalogue.at[(single_key_stock), 'Store_name']
-
-            df_stock.loc[(single_key_stock), 'Warehouse'] = store_name
+            store_name = df_customer_catalogue.at[(individual_stock_key), 'Store_name']
+            df_stock.loc[(individual_stock_key), 'Warehouse'] = store_name
         except KeyError as error:
-            print('{} - Store not found'.format(error))
+            print('{} - Store does not exist in customer catalogue file'.format(error))
         except Exception as error:
-            print(error)
-            return (False, [])
-
+            print('{} - getting_stock_store_names Cod: 02',format(error))
+    
+    df_stock.reset_index(drop=True, inplace=True)
     return (True, [df_stock])
 
 
@@ -454,10 +470,48 @@ def writing_files(df_to_be_written, folder_name, file_name):
 
 def generating_sales_files(df_sales):
 
-    print(df_sales)
-    exit() 
+    try:
+        df_sales['Country_key'] = df_sales['Country']
+        df_sales['Dist_key'] = df_sales['Diageo Customer ID']
+        df_sales.set_index(['Country_key', 'Dist_key'], inplace=True)
+    except Exception as error:
+        print('{} - Error generating_sales_files Cod: 01')
+        sys.exit()
+
+    for single_sales_key in df_sales.index.unique():
+        country_name, distributor = single_sales_key
+        single_df_sales = df_sales.loc[[single_sales_key], :]
+        individual_sales_file_name = 'SALES_' + distributor
+        folder_name = country_name + '_' + distributor
+
+        try:
+            writing_files(single_df_sales, folder_name, individual_sales_file_name)
+        except Exception as error:
+            print('{} {} - Error. Not possible saving Sales file'.format(error, single_sales_key))
+    
+    return (True, [])
 
 
+def generating_stock_files(df_stock):
+
+    try:
+        df_stock['Country_key'] = df_stock['Country']
+        df_stock['Dist_key'] = df_stock['Diageo Customer ID']
+        df_stock.set_index(['Country_key', 'Dist_key'], inplace=True)
+    except Exception as error:
+        print('{} - Error generating_stock_files Cod: 01')
+        sys.exit()
+
+    for single_stock_key in df_stock.index.unique():
+        country_name, distributor = single_stock_key
+        single_df_stock = df_stock.loc[[single_stock_key], :]
+        individual_stock_file_name = 'STOCK_' + distributor
+        folder_name = country_name + '_' + distributor
+
+        try:
+            writing_files(single_df_stock, folder_name, individual_stock_file_name)
+        except Exception as error:
+            print('{} {} - Error. Not possible saving Sales file'.format(error, single_stock_key))
 
 def main():
 
@@ -465,7 +519,7 @@ def main():
         print('getting_destination_path')
         success_getting_destination_path, content_getting_destination_path = getting_destination_path()
     except Exception as error:
-        print('{} - Error getting_destination_path'.format(Error))
+        print('{} - Error getting_destination_path'.format(error))
         sys.exit()
     finally:
         if success_getting_destination_path:
@@ -673,7 +727,7 @@ def main():
     
     try:
         print('filling_stock_information')
-        success_filling_stock_information, content_filling_stock_information = filling_stock_information(df_stock, df_dist_names, df_customer_catalogue)
+        success_filling_stock_information, content_filling_stock_information = filling_stock_information(df_stock, df_dist_names)
     except Exception as error:
         print('{} - Error filling_stock_information'.format(error))
         sys.exit()
@@ -683,6 +737,17 @@ def main():
         else:
             sys.exit()
     
+    try:
+        print('getting_stock_store_names') 
+        success_getting_stock_store_names, content_getting_stock_store_names = getting_stock_store_names(df_stock, df_customer_catalogue)
+    except Exception as error:
+        print('{} - Error getting_stock_store_names'.format(error))
+    finally:
+        if success_getting_stock_store_names:
+            df_stock = content_getting_stock_store_names[0]
+        else:
+            sys.exit()
+
     try:
         print('creating_new_stores_dataframe')
         success_creating_new_stores_dataframe, content_creating_new_stores_dataframe = creating_new_stores_dataframe()
@@ -712,8 +777,19 @@ def main():
         print('{} - Error creating_folders')
         sys.exit()
 
-    generating_sales_files(df_sales)
-    print(df_automation.head(5))
+    try:
+        generating_sales_files(df_sales)
+    except Exception as error:
+        print('{} - Error generating_sales_files'.format(error))
+        sys.exit()
+    
+    try:
+        generating_stock_files(df_stock)
+    except Exception as error:
+        print('{} - Error generating_stock_files')
+        sys.exit()
+
+    #print(df_automation.head(5))
 
 
 if __name__ == "__main__":
