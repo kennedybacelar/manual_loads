@@ -15,11 +15,13 @@ def getting_destination_path():
 
 def defining_paths():
 
-    automation_template_path = '../Catalogues_Manual_Loads/Automation_Template.xlsx'
-    customer_catalogue_path = '../Catalogues_Manual_Loads/customer_catalogue.xlsx'
-    dist_names_path = '../Catalogues_Manual_Loads/dist_names.xlsx'
-    product_master_path = '../Catalogues_Manual_Loads/product_master.xlsx'
-    sku_map_path = '../Catalogues_Manual_Loads/product_master.xlsx'
+    all_template_files_path = '../Catalogues_Manual_Loads/'
+
+    automation_template_path = all_template_files_path + 'Automation_Template.xlsx'
+    customer_catalogue_path = all_template_files_path + 'customer_catalogue.xlsx'
+    dist_names_path = all_template_files_path + 'dist_names.xlsx'
+    product_master_path = all_template_files_path + 'product_master.xlsx'
+    sku_map_path = all_template_files_path + 'sku_map.xlsx'
 
     return (True, 
             [automation_template_path, 
@@ -235,6 +237,45 @@ def removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors
     
     df_automation.reset_index(drop=True, inplace=True)
     return (True, [df_automation])
+
+
+def creating_new_skus_map_dataframe():
+
+    sku_map_columns = [
+        'Dist_SAP_Code', 'Dist_SKU_Code', 'Dist_Description',
+        'Diageo_SKU_Code', 'Multiplication_Factor', 'Share_Participation'
+    ]
+
+    df_unmapped_skus = pd.DataFrame(columns=sku_map_columns)
+    return (True, [df_unmapped_skus])
+    
+
+def mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus):
+
+    try:
+        df_sku_map.set_index(['Distributor_SAP_Code', 'Distributor_SKU_Code'], inplace=True)
+        df_sku_map = df_sku_map[~df_sku_map.index.duplicated(keep='first')]
+
+        df_automation.set_index(['Distributor_id', 'Chain_Product_Code'], inplace=True)
+    except Exception as error:
+        print('{} - Error mapping_new_skus Cod: 01'.format(error))
+        return (False, [])
+    
+    try:
+        for single_key_automation in df_automation.index.unique():
+                if single_key_automation not in df_sku_map.index:
+                    dist_sap_code, dist_sku_code = single_key_automation
+                    lengh_df_unmapped_skus = len(df_unmapped_skus)
+                    df_unmapped_skus.loc[(lengh_df_unmapped_skus), 'Dist_SAP_Code'] = dist_sap_code
+                    df_unmapped_skus.loc[(lengh_df_unmapped_skus), 'Dist_SKU_Code'] = dist_sku_code
+        df_unmapped_skus['Multiplication_Factor'] = 1
+        df_unmapped_skus['Share_Participation'] = 1
+    except Exception as error:
+        print('{} - Error mapping_new_skus Cod: 02')
+        return (False, [])    
+
+    df_automation.reset_index(drop=True, inplace=True)
+    return (True, [df_automation, df_unmapped_skus])
 
 
 def splitting_sales_and_stock(df_automation):
@@ -661,6 +702,29 @@ def main():
     finally:
         if success_removing_invalid_keys_of_df_automation:
             df_automation = content_removing_invalid_keys_of_df_automation[0]
+        else:
+            sys.exit()
+    
+    try:
+        print('creating_new_skus_map_dataframe')
+        success_creating_new_skus_map_dataframe, content_creating_new_skus_map_dataframe = creating_new_skus_map_dataframe()
+    except Exception as error:
+        print('{} - Error creating_new_skus_map_dataframe'.format(error))
+        sys.exit()
+    finally:
+        if success_creating_new_skus_map_dataframe:
+            df_unmapped_skus = content_creating_new_skus_map_dataframe[0]
+
+    try:
+        print('mapping_new_skus')
+        success_mapping_new_skus, content_mapping_new_skus = mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus)
+    except Exception as error:
+        print('{} - Error mapping_new_skus'.format(error))
+        sys.exit()
+    finally:
+        if success_mapping_new_skus:
+            df_automation = content_mapping_new_skus[0]
+            df_unmapped_skus = content_mapping_new_skus[1]
         else:
             sys.exit()
 
