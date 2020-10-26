@@ -17,7 +17,7 @@ def defining_paths():
 
     all_template_files_path = '../../../Catalogues_Manual_Loads/'
 
-    automation_template_path = all_template_files_path + 'Automation_Template.xlsx'
+    automation_template_path = all_template_files_path + 'automation_Template.xlsx'
     customer_catalogue_path = all_template_files_path + 'customer_catalogue.xlsx'
     dist_names_path = all_template_files_path + 'dist_names.xlsx'
     product_master_path = all_template_files_path + 'product_master.xlsx'
