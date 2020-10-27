@@ -796,18 +796,20 @@ def main():
             not_valid_distributors = content_getting_corrected_countries[2]
         else:
             sys.exit()
-    
-    try:
-        print('removing_invalid_keys_of_df_automation')
-        success_removing_invalid_keys_of_df_automation, content_removing_invalid_keys_of_df_automation = removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors)
-    except Exception as error:
-        print('{} - Error removing_invalid_keys_of_df_automation'.format(error))
-        sys.exit()
-    finally:
-        if success_removing_invalid_keys_of_df_automation:
-            df_automation = content_removing_invalid_keys_of_df_automation[0]
-        else:
+
+
+    if not_valid_distributors:
+        try:
+            print('removing_invalid_keys_of_df_automation')
+            success_removing_invalid_keys_of_df_automation, content_removing_invalid_keys_of_df_automation = removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors)
+        except Exception as error:
+            print('{} - Error removing_invalid_keys_of_df_automation'.format(error))
             sys.exit()
+        finally:
+            if success_removing_invalid_keys_of_df_automation:
+                df_automation = content_removing_invalid_keys_of_df_automation[0]
+            else:
+                sys.exit()
     
     try:
         print('creating_new_skus_map_dataframe')
