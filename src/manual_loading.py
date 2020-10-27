@@ -304,7 +304,7 @@ def assigning_df_automation_to_df_sales(df_automation_sales, df_sales):
         df_sales['Product Code'] = df_automation_sales['Chain_Product_Code']
         df_sales['Quantity'] = df_automation_sales['Quantity']
         df_sales['Total Amount WITHOUT TAX'] = df_automation_sales['Sales_Without_Tax']
-        df_sales['Total Amount WITH TAX'] = df_automation_sales['Sales_Without_Tax']
+        df_sales['Total Amount WITH TAX'] = df_automation_sales['Sales_With_Tax']
     except Exception as error:
         print('{} - error assigning_df_automation_to_df_sales'.format(error))
         return (False, [])
