@@ -607,7 +607,8 @@ def generating_stock_files(df_stock):
         to_be_saved_on_root_directory = True
         writing_files(df_stock, folder_all_stock, All_stock_file_name, to_be_saved_on_root_directory)
     except Exception as error:
-        print('{} - Error. Not possible saving Sales file - ALL')
+        print('{} - Error. Not possible saving Stock file - ALL'.format(error))
+        return (False, [])
 
     #Generating stock files by Country/Dist
     for single_stock_key in df_stock.index.unique():
@@ -616,7 +617,7 @@ def generating_stock_files(df_stock):
         individual_stock_file_name = 'STOCK_' + distributor
         folder_name = country_name + '_' + distributor
         to_be_saved_on_root_directory = False
-
+            
         try:
             writing_files(single_df_stock, folder_name, individual_stock_file_name, to_be_saved_on_root_directory)
         except Exception as error:
