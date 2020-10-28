@@ -972,20 +972,20 @@ def main():
         except Exception as error:
             print('{} - Error generating_unmapped_skus_file')
 
-
-    try:
-        print('generating_sales_files')
-        generating_sales_files(df_sales)
-    except Exception as error:
-        print('{} - Error generating_sales_files'.format(error))
-        sys.exit()
-    
-    try:
-        print('generating_stock_files')
-        generating_stock_files(df_stock)
-    except Exception as error:
-        print('{} - Error generating_stock_files'.format(error))
-        sys.exit()
+    if (len(df_sales) > 0):
+        try:
+            print('generating_sales_files')
+            generating_sales_files(df_sales)
+        except Exception as error:
+            print('{} - Error generating_sales_files'.format(error))
+            sys.exit()
+    if (len(df_stock) > 0):
+        try:
+            print('generating_stock_files')
+            generating_stock_files(df_stock)
+        except Exception as error:
+            print('{} - Error generating_stock_files'.format(error))
+            sys.exit()
     
     if (len(df_new_stores_catalogue) > 0):
         try:
