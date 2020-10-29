@@ -443,7 +443,7 @@ def creating_new_stores_dataframe():
 
     new_stores_catalogue_columns = [
         'POS_ID', 'Store Nbr', 'Store Name', 'SAP_Code', 'Chain', 
-        'Commercial Group', 'Store/Business', 'Type', 'Subchannel',
+        'Commercial Group', 'Store/Business Type', 'Subchannel',
         'Channel', 'Trade', 'Segment', 'Occasion', 'Occasion Segment', 
         'Mechandiser', 'Supervisor', 'Provice or Commune', 'City',
         'State or Region', 'Country', 'COU'
@@ -979,6 +979,7 @@ def main():
         except Exception as error:
             print('{} - Error generating_sales_files'.format(error))
             sys.exit()
+
     if (len(df_stock) > 0):
         try:
             print('generating_stock_files')
