@@ -393,7 +393,6 @@ def filling_stock_information(df_stock, df_dist_names):
         df_stock['temp_country_key'] = df_stock['Country'].str.lower()
         df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
         df_stock.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
-        df_stock = df_stock[~df_stock.index.duplicated(keep='first')]
     except Exception as error:
         print('{} - Error filling_stock_information Cod: 01'.format(error))
         return (False, [])
@@ -408,7 +407,7 @@ def filling_stock_information(df_stock, df_dist_names):
             print('{} - Error filling_stock_information Cod: 02'.format(error))
             return (False, [])
 
-    df_stock.reset_index(drop=True, inplace=True)
+    df_stock.reset_index(inplace=True)
     return (True, [df_stock])
 
 
@@ -465,23 +464,23 @@ def generating_new_stores_df(df_automation, df_customer_catalogue, df_new_stores
         return (False, [])
     
     for single_key_automation in df_automation.index.unique():
-        try:
-            if single_key_automation not in df_customer_catalogue.index.unique():
-                store_country, store_dist_id, store_number = single_key_automation
-                df_new_stores_catalogue_lenght = len(df_new_stores_catalogue)
+        if single_key_automation not in df_customer_catalogue.index.unique():
+            try:
+                    store_country, store_dist_id, store_number = single_key_automation
+                    df_new_stores_catalogue_lenght = len(df_new_stores_catalogue)
 
-                df_new_stores_catalogue.loc[df_new_stores_catalogue_lenght, 'Country'] = store_country
-                df_new_stores_catalogue.loc[df_new_stores_catalogue_lenght, 'SAP_Code'] = store_dist_id
-                df_new_stores_catalogue.loc[df_new_stores_catalogue_lenght, 'Store Nbr'] = store_number
-        except Exception as error:
-            print('{} - Error generating_new_stores_df Cod: 02'.format(error))
-            return (False, [])
-        
-        try:
-            store_name = df_automation.at[(single_key_automation), 'Store_Name']
-            df_new_stores_catalogue.at[(df_new_stores_catalogue_lenght), 'Store Name'] = store_name
-        except Exception as error:
-            print('{} - Error generating_new_stores_df Cod: 03'.format(error))
+                    df_new_stores_catalogue.loc[df_new_stores_catalogue_lenght, 'Country'] = store_country
+                    df_new_stores_catalogue.loc[df_new_stores_catalogue_lenght, 'SAP_Code'] = store_dist_id
+                    df_new_stores_catalogue.loc[df_new_stores_catalogue_lenght, 'Store Nbr'] = store_number
+            except Exception as error:
+                print('{} - Error generating_new_stores_df Cod: 02'.format(error))
+                return (False, [])
+            
+            try:
+                store_name = df_automation.at[(single_key_automation), 'Store_Name']
+                df_new_stores_catalogue.at[(df_new_stores_catalogue_lenght), 'Store Name'] = store_name
+            except Exception as error:
+                print('{} - Error generating_new_stores_df Cod: 03'.format(error))
 
     df_automation.reset_index(inplace=True)
     return (True, [df_new_stores_catalogue])
