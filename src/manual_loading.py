@@ -364,6 +364,9 @@ def filling_sales_information(df_sales, df_dist_names):
 
         #df_dist_names are already set and they are ['Country_key', 'Distributor_id']
         df_dist_names = df_dist_names[~df_dist_names.index.duplicated(keep='first')]
+
+        #Hard-coding below column
+        df_sales['Unit of measure'] = 'BTL'
     except Exception as error:
         print('{} - Error when filling_sales_information Cod: 01'.format(error))
         return (False, [])
@@ -393,6 +396,9 @@ def filling_stock_information(df_stock, df_dist_names):
         df_stock['temp_country_key'] = df_stock['Country'].str.lower()
         df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
         df_stock.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
+
+        #Hard-coding below column
+        df_stock['Unit of measure'] = 'BTL'
     except Exception as error:
         print('{} - Error filling_stock_information Cod: 01'.format(error))
         return (False, [])
