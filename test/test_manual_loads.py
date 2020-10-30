@@ -249,5 +249,33 @@ class TestManualLoading(unittest.TestCase):
         pd.testing.assert_frame_equal(returned_df_sales, df_sales_expected)
 
 
+    def test_assigning_df_automation_to_df_stock(self):
+
+        df_automation_stock = pd.DataFrame(columns=self.automation_template_columns)
+        df_stock = pd.DataFrame(columns=self.stock_file_columns)
+        df_stock_expected = pd.DataFrame(columns=self.stock_file_columns)
+
+        df_automation_stock['Country'] = ['Brazil']
+        df_automation_stock['Distributor_id'] = ['123']
+        df_automation_stock['Invoice_Date'] = ['20201030']
+        df_automation_stock['Store_Number'] = ['store-02']
+        df_automation_stock['Chain_Product_Code'] = ['ABC']
+        df_automation_stock['Quantity'] = [900]
+        df_automation_stock['Store_Name'] = ['Warehouse_downtown']
+
+        df_stock_expected['Country'] = ['Brazil']
+        df_stock_expected['Diageo Customer ID'] = ['123']
+        df_stock_expected['Invoice Date'] = ['20201030']
+        df_stock_expected['Warehouse Number'] = ['store-02']
+        df_stock_expected['Product Code'] = ['ABC']
+        df_stock_expected['Quantity'] = [900]
+        df_stock_expected['Warehouse'] = ['Warehouse_downtown']
+
+        success, content = manual_loading.assigning_df_automation_to_df_stock(df_automation_stock, df_stock)
+        returned_df_stock = content[0]
+
+        self.assertEqual(success, True)
+        pd.testing.assert_frame_equal(returned_df_stock, df_stock_expected)
+
 if __name__ == "__main__":
     unittest.main()
