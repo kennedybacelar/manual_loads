@@ -187,5 +187,36 @@ class TestManualLoading(unittest.TestCase):
         pd.testing.assert_frame_equal(returned_df_unmapped_skus, df_expected_unmapped_skus)
 
 
+    def test_splitting_sales_and_stock(self):
+
+        df_automation = pd.DataFrame(columns=self.automation_template_columns)
+        df_automation_sales_expected = pd.DataFrame(columns=self.automation_template_columns)
+        df_automation_stock_expected = pd.DataFrame(columns=self.automation_template_columns)
+
+        df_automation['Distributor_id'] = ['123', '456', 'xxx']
+        df_automation['Chain_Product_Code'] = ['ABC', 'DEF', 'yyy']
+        df_automation['Data_Type'] = ['sales', 'stock', 'test_wrong_input']
+
+        df_automation_sales_expected['Distributor_id'] = ['123']
+        df_automation_sales_expected['Chain_Product_Code'] = ['ABC']
+        df_automation_sales_expected['Data_Type'] = ['sales']
+        
+        df_automation_stock_expected['Distributor_id'] = ['456']
+        df_automation_stock_expected['Chain_Product_Code'] = ['DEF']
+        df_automation_stock_expected['Data_Type'] = ['stock']
+
+        success, content = manual_loading.splitting_sales_and_stock(df_automation)
+        returned_df_automation_sales = content[0]
+        returned_df_automation_stock = content[1]
+
+        #Reseting index because the testing was failing in Index DType comparation
+        returned_df_automation_sales.reset_index(drop=True, inplace=True)
+        returned_df_automation_stock.reset_index(drop=True, inplace=True)
+
+        self.assertEqual(success, True)
+        pd.testing.assert_frame_equal(returned_df_automation_sales, df_automation_sales_expected)
+        pd.testing.assert_frame_equal(returned_df_automation_stock, df_automation_stock_expected)
+
+
 if __name__ == "__main__":
     unittest.main()
