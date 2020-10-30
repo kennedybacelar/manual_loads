@@ -217,6 +217,37 @@ class TestManualLoading(unittest.TestCase):
         pd.testing.assert_frame_equal(returned_df_automation_sales, df_automation_sales_expected)
         pd.testing.assert_frame_equal(returned_df_automation_stock, df_automation_stock_expected)
 
+    
+    def test_assigning_df_automation_to_df_sales(self):
+
+        df_automation_sales = pd.DataFrame(columns=self.automation_template_columns)
+        df_sales = pd.DataFrame(columns=self.sales_file_columns)
+        df_sales_expected = pd.DataFrame(columns=self.sales_file_columns)
+
+        df_automation_sales['Country'] = ['Hungary']
+        df_automation_sales['Distributor_id'] = ['123']
+        df_automation_sales['Invoice_Date'] = ['20201030']
+        df_automation_sales['Store_Number'] = ['store-01']
+        df_automation_sales['Chain_Product_Code'] = ['ABC']
+        df_automation_sales['Quantity'] = [255]
+        df_automation_sales['Sales_Without_Tax'] = [456.5]
+        df_automation_sales['Sales_With_Tax'] = [480]
+
+        df_sales_expected['Country'] = ['Hungary']
+        df_sales_expected['Diageo Customer ID'] = ['123']
+        df_sales_expected['Invoice Date'] = ['20201030']
+        df_sales_expected['Store code'] = ['store-01']
+        df_sales_expected['Product Code'] = ['ABC']
+        df_sales_expected['Quantity'] = [255]
+        df_sales_expected['Total Amount WITHOUT TAX'] = [456.5]
+        df_sales_expected['Total Amount WITH TAX'] = [480]
+
+        success, content = manual_loading.assigning_df_automation_to_df_sales(df_automation_sales, df_sales)
+        returned_df_sales = content[0]
+
+        self.assertEqual(success, True)
+        pd.testing.assert_frame_equal(returned_df_sales, df_sales_expected)
+
 
 if __name__ == "__main__":
     unittest.main()
