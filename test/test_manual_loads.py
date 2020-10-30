@@ -276,6 +276,30 @@ class TestManualLoading(unittest.TestCase):
 
         self.assertEqual(success, True)
         pd.testing.assert_frame_equal(returned_df_stock, df_stock_expected)
+    
+
+    def test_sanitizing_sales_file(self):
+
+        df_sales = pd.DataFrame(columns=self.sales_file_columns)
+        df_sales_expected = pd.DataFrame(columns=self.sales_file_columns)
+
+        df_sales['Quantity'] = ['150-']
+        df_sales['Total Amount WITH TAX'] = ['225-']
+        df_sales['Total Amount WITHOUT TAX'] = ['175-']
+
+        df_sales_expected['Quantity'] = ['-150']
+        df_sales_expected['Total Amount WITH TAX'] = ['-225']
+        df_sales_expected['Total Amount WITHOUT TAX'] = ['-175']
+
+        #Converting whole dataframe to dtype 'int64'
+        df_sales_expected = df_sales_expected.apply(pd.to_numeric)
+
+        success, content = manual_loading.sanitizing_sales_file(df_sales)
+        returned_df_sales = content[0]
+        df_sales_expected = df_sales_expected.fillna('')
+
+        self.assertEqual(success, True)
+        pd.testing.assert_frame_equal(returned_df_sales, df_sales_expected, check_dtype=False)
 
 if __name__ == "__main__":
     unittest.main()
