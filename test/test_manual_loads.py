@@ -23,7 +23,7 @@ class TestManualLoading(unittest.TestCase):
             ]
         
         cls.stock_file_columns = [
-            'Country', 'Product Code' 'Diageo Customer ID', 'Diageo Customer Name',
+            'Country', 'Product Code', 'Diageo Customer ID', 'Diageo Customer Name',
             'Invoice Date', 'Quantity', 'Unit of measure', 'Warehouse Number', 'Warehouse'
             ]
 
@@ -331,6 +331,35 @@ class TestManualLoading(unittest.TestCase):
 
         self.assertEqual(success, True)
         pd.testing.assert_frame_equal(returned_df_sales, df_sales_expected)
+    
+
+    def test_filling_stock_information(self):
+
+        df_stock = pd.DataFrame(columns=self.stock_file_columns)
+        df_stock_expected = pd.DataFrame(columns=self.stock_file_columns)
+        df_dist_names = pd.DataFrame(columns=self.dist_names_columns)
+
+        df_stock['Country'] = ['Japan', 'USA']
+        df_stock['Diageo Customer ID'] = ['123', '456']
+
+        df_dist_names['Country_key'] = ['japan', 'usa']
+        df_dist_names['Dist_key'] = ['123', '456']
+        df_dist_names['Distributor_country'] = ['Japan', 'USA']
+        df_dist_names['Distributor_id'] = ['123', '456']
+        df_dist_names['Distributor_name'] = ['Sushi', 'NBA']
+        df_dist_names.set_index(['Country_key', 'Dist_key'], inplace=True)
+
+        df_stock_expected['Country'] = ['Japan', 'USA']
+        df_stock_expected['Diageo Customer ID'] = ['123', '456']
+        df_stock_expected['Unit of measure'] = ['BTL', 'BTL']
+        df_stock_expected['Diageo Customer Name'] = ['Sushi', 'NBA']
+
+        success, content = manual_loading.filling_stock_information(df_stock, df_dist_names)
+        returned_df_stock = content[0]
+
+        self.assertEqual(success, True)
+        pd.testing.assert_frame_equal(returned_df_stock, df_stock_expected)
+
 
 if __name__ == "__main__":
     unittest.main()
