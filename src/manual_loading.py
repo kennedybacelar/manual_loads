@@ -413,7 +413,7 @@ def filling_stock_information(df_stock, df_dist_names):
             print('{} - Error filling_stock_information Cod: 02'.format(error))
             return (False, [])
 
-    df_stock.reset_index(inplace=True)
+    df_stock.reset_index(drop=True, inplace=True)
     return (True, [df_stock])
 
 
