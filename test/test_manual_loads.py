@@ -32,7 +32,8 @@ class TestManualLoading(unittest.TestCase):
             ]
         
         cls.dist_names_columns = [
-            'Distributor_country', 'Distributor_id', 'Distributor_name', 'Distributor_Currency'
+            'Distributor_country', 'Distributor_id', 'Distributor_name',
+            'Distributor_Currency', 'Country_key', 'Dist_key'
             ]
         
         cls.sku_map_columns = [
@@ -300,6 +301,36 @@ class TestManualLoading(unittest.TestCase):
 
         self.assertEqual(success, True)
         pd.testing.assert_frame_equal(returned_df_sales, df_sales_expected, check_dtype=False)
+    
+
+    def test_filling_sales_information(self):
+
+        df_sales = pd.DataFrame(columns=self.sales_file_columns)
+        df_sales_expected = pd.DataFrame(columns=self.sales_file_columns)
+        df_dist_names = pd.DataFrame(columns=self.dist_names_columns)
+
+        df_sales['Country'] = ['Brazil', 'Argentina']
+        df_sales['Diageo Customer ID'] = ['123', '456']
+
+        df_dist_names['Country_key'] = ['brazil', 'argentina']
+        df_dist_names['Dist_key'] = ['123', '456']
+        df_dist_names['Distributor_country'] = ['Brazil', 'Argentina']
+        df_dist_names['Distributor_id'] = ['123', '456']
+        df_dist_names['Distributor_name'] = ['Walmart_Brazil', 'Restarurante Maradona']
+        df_dist_names['Distributor_Currency'] = ['BRL', 'ARS']
+        df_dist_names.set_index(['Country_key', 'Dist_key'], inplace=True)
+
+        df_sales_expected['Country'] = ['Brazil', 'Argentina']
+        df_sales_expected['Diageo Customer ID'] = ['123', '456']
+        df_sales_expected['Unit of measure'] = ['BTL', 'BTL']
+        df_sales_expected['Currency Code'] = ['BRL', 'ARS']
+        df_sales_expected['Diageo Customer Name'] = ['Walmart_Brazil', 'Restarurante Maradona']
+
+        success, content = manual_loading.filling_sales_information(df_sales, df_dist_names)
+        returned_df_sales = content[0]
+
+        self.assertEqual(success, True)
+        pd.testing.assert_frame_equal(returned_df_sales, df_sales_expected)
 
 if __name__ == "__main__":
     unittest.main()
