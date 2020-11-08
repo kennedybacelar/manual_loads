@@ -457,38 +457,47 @@ def creating_new_stores_dataframe():
     return (True, [df_new_stores_catalogue])
 
 
-def generating_new_stores_df(df_automation, df_customer_catalogue, df_new_stores_catalogue):
+def generating_list_of_unmapped_stores(df_automation, df_customer_catalogue):
 
     try:
-        df_automation.set_index(['Country', 'Distributor_id', 'Store_Number'], inplace=True)
-        df_automation = df_automation[~df_automation.index.duplicated(keep='first')]
-        
         df_customer_catalogue.reset_index(inplace=True)
-        df_customer_catalogue.set_index(['Country', 'Distributor_id', 'Store_id'], inplace=True)
     except Exception as error:
-        print('{} - Error generating_new_stores_df Cod: 01'.format(error))
+        print('{} - Error generating_new_stores_df. Cod 01'.format(error))
         return (False, [])
     
-    for single_key_automation in df_automation.index.unique():
-        if single_key_automation not in df_customer_catalogue.index.unique():
-            try:
-                    store_country, store_dist_id, store_number = single_key_automation
-                    df_new_stores_catalogue_lenght = len(df_new_stores_catalogue)
-
-                    df_new_stores_catalogue.loc[df_new_stores_catalogue_lenght, 'Country'] = store_country
-                    df_new_stores_catalogue.loc[df_new_stores_catalogue_lenght, 'SAP_Code'] = store_dist_id
-                    df_new_stores_catalogue.loc[df_new_stores_catalogue_lenght, 'Store Nbr'] = store_number
-            except Exception as error:
-                print('{} - Error generating_new_stores_df Cod: 02'.format(error))
-                return (False, [])
-            
-            try:
-                store_name = df_automation.at[(single_key_automation), 'Store_Name']
-                df_new_stores_catalogue.at[(df_new_stores_catalogue_lenght), 'Store Name'] = store_name
-            except Exception as error:
-                print('{} - Error generating_new_stores_df Cod: 03'.format(error))
+    try:
+        #Concatenating triple index in order to try to make 'if' condition lighter than multindex
+        concatenated_indexes_automation = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'])
+        list_of_all_stores_in_customer_catalogue = (df_customer_catalogue['Country'] +';'+ df_customer_catalogue['Distributor_id'] +';'+ df_customer_catalogue['Store_id']).unique().tolist()
+        indexes_df_unmapped_stores = ~concatenated_indexes_automation.isin(list_of_all_stores_in_customer_catalogue)
+        list_of_unmapped_stores = concatenated_indexes_automation[indexes_df_unmapped_stores].unique()
+    except Exception as error:
+        print('{} - Error generating_new_stores_df. Cod 02'.format(error))
+        return (False, [])
 
     df_automation.reset_index(inplace=True)
+    return (True, [list_of_unmapped_stores])
+
+
+def generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores):
+
+    try:
+        for single_store in list_of_unmapped_stores:
+            triple_key_list = single_store.split(';')
+            country = triple_key_list[0]
+            distributor_id = triple_key_list[1]
+            store_number = triple_key_list[2]
+
+            lengh_df_new_stores_catalogue = len(df_new_stores_catalogue)
+
+            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Country'] = country
+            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'SAP_Code'] = distributor_id
+            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Nbr'] = store_number
+        df_new_stores_catalogue['COU'] = 0
+    except Exception as error:
+        print('{} - Error generating_new_stores_df'.format(error))
+        return (False, [])
+
     return (True, [df_new_stores_catalogue])
 
 
@@ -933,24 +942,37 @@ def main():
     finally:
         if success_creating_new_stores_dataframe:
             df_new_stores_catalogue = content_creating_new_stores_dataframe[0]
-
+    
     try:
-        print('generating_new_stores_df')
-        success_generating_new_stores_df, content_generating_new_stores_df = generating_new_stores_df(df_automation, df_customer_catalogue, df_new_stores_catalogue)
+        print('generating_list_of_unmapped_stores')
+        success_generating_list_of_unmapped_stores, content_generating_list_of_unmapped_stores = generating_list_of_unmapped_stores(df_automation, df_customer_catalogue)
     except Exception as error:
-        print('{} - Error generating_new_stores_df')
+        print('{} - Error generating_list_of_unmapped_stores'.format(error))
         sys.exit()
     finally:
-        if success_generating_new_stores_df:
-            df_new_stores_catalogue = content_generating_new_stores_df[0]
+        if success_generating_list_of_unmapped_stores:
+            list_of_unmapped_stores = content_generating_list_of_unmapped_stores[0]
         else:
             sys.exit()
+    
+    if len(list_of_unmapped_stores) > 0:
+        try:
+            print('generating_new_stores_df')
+            success_generating_new_stores_df, content_generating_new_stores_df = generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores)
+        except Exception as error:
+            print('{} - Error generating_new_stores_df'.format(error))
+            sys.exit()
+        finally:
+            if success_generating_new_stores_df:
+                df_new_stores_catalogue = content_generating_new_stores_df[0]
+            else:
+                sys.exit()
 
     try:
         print('creating_folders')
         creating_folders(destination_path, valid_automation_distributors)
     except Exception as error:
-        print('{} - Error creating_folders')
+        print('{} - Error creating_folders'.format(error))
         sys.exit()
     
     if (len(not_valid_distributors) > 0):
@@ -993,7 +1015,7 @@ def main():
             print('{} - Error generating_stock_files'.format(error))
             sys.exit()
     
-    if (len(df_new_stores_catalogue) > 0):
+    if (len(list_of_unmapped_stores) > 0):
         try:
             print('generating_customer_catalogue_files')
             success_generating_customer_catalogue_files ,content_generating_customer_catalogue_files = generating_customer_catalogue_files(df_new_stores_catalogue)
