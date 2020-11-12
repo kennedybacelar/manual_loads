@@ -108,6 +108,8 @@ def sanitizing_df_automation(df_automation):
         df_automation['Country'] = df_automation['Country'].str.lower()
         df_automation['Country'] = df_automation['Country'].str.strip()
         df_automation['Store_Name'] = df_automation['Store_Name'].str[:100]
+        df_automation['Invoice_Date'] = df_automation['Invoice_Date'].str.strip()
+        df_automation['Chain_Product_Code'] = df_automation['Chain_Product_Code'].str.strip()
     except KeyError as error:
         print('{} - Column not found'.format(error))
     except Exception as error:
