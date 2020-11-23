@@ -334,6 +334,11 @@ def assigning_df_automation_to_df_stock(df_automation_stock, df_stock):
 def sanitizing_sales_file(df_sales):
     
     try:
+        #Striping columns
+        df_sales['Total Amount WITH TAX'] = df_sales['Total Amount WITH TAX'].str.strip()    
+        df_sales['Total Amount WITHOUT TAX'] = df_sales['Total Amount WITHOUT TAX'].str.strip()
+        df_sales['Quantity'] = df_sales['Quantity'].str.strip()
+
         #Removing negative sign from the end of the values (Some samples were found)
         values_that_end_with_negative_sign_quantity = (df_sales['Quantity'].str[-1] == '-')
         df_sales.loc[values_that_end_with_negative_sign_quantity, 'Quantity'] = '-' + df_sales.loc[values_that_end_with_negative_sign_quantity, 'Quantity'].str[:-1]
@@ -343,11 +348,11 @@ def sanitizing_sales_file(df_sales):
         
         values_that_end_with_negative_sign_total_without_tax = (df_sales['Total Amount WITHOUT TAX'].str[-1] == '-')
         df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'] = '-' + df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'].str[:-1]
-        
+
         #Turning it numeric below quantities
-        df_sales['Quantity'] = pd.to_numeric(df_sales['Quantity']).fillna(0)
-        df_sales['Total Amount WITH TAX'] = pd.to_numeric(df_sales['Total Amount WITH TAX']).fillna(0)
-        df_sales['Total Amount WITHOUT TAX'] = pd.to_numeric(df_sales['Total Amount WITHOUT TAX']).fillna(0)
+        df_sales['Quantity'] = pd.to_numeric(df_sales['Quantity'], errors='coerce').fillna(0)
+        df_sales['Total Amount WITH TAX'] = pd.to_numeric(df_sales['Total Amount WITH TAX'], errors='coerce').fillna(0)
+        df_sales['Total Amount WITHOUT TAX'] = pd.to_numeric(df_sales['Total Amount WITHOUT TAX'], errors='coerce').fillna(0)
     
         df_sales = df_sales.fillna('')
     except Exception as error:
