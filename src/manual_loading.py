@@ -22,17 +22,19 @@ def defining_paths():
     dist_names_path = all_template_files_path + 'dist_names.xlsx'
     product_master_path = all_template_files_path + 'product_master.xlsx'
     sku_map_path = all_template_files_path + 'sku_map.xlsx'
+    segmentation_customer_path = all_template_files_path + 'segmentation_customer.xlsx'
 
     return (True, 
             [automation_template_path, 
             customer_catalogue_path,
             dist_names_path,
             product_master_path,
-            sku_map_path])
+            sku_map_path,
+            segmentation_customer_path])
     
 
 def loading_frames(automation_template_path, customer_catalogue_path, dist_names_path,
-    product_master_path, sku_map_path):
+    product_master_path, sku_map_path, segmentation_customer_path):
 
     try:
         df_automation = pd.read_excel(automation_template_path, dtype=str, header=0).fillna('')
@@ -65,7 +67,14 @@ def loading_frames(automation_template_path, customer_catalogue_path, dist_names
         print(error)
         return (False, [])
     
-    return (True, [df_automation, df_customer_catalogue, df_dist_names, df_sku_map, df_sap_codes_vs_chains])
+    try:
+        df_segmentation_customer = pd.read_excel(segmentation_customer_path, dtype=str,
+            sheet_name='Sheet1').fillna('')
+    except Exception as error:
+        print(error)
+        return (False, [])
+    
+    return (True, [df_automation, df_customer_catalogue, df_dist_names, df_sku_map, df_sap_codes_vs_chains, df_segmentation_customer])
 
 
 def declaring_sales_file_final_format():
@@ -510,6 +519,28 @@ def generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores):
 
     return (True, [df_new_stores_catalogue])
 
+def filling_df_new_stores_with_segmentation_customer_information(df_new_stores_catalogue, 
+    df_segmentation_customer):
+
+    df_new_stores_catalogue['temp_country_key'] = df_new_stores_catalogue['Country']
+    df_new_stores_catalogue['temp_dist_key'] = df_new_stores_catalogue['SAP_Code']
+    df_new_stores_catalogue.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
+
+    df_segmentation_customer.set_index(['Country_aux', 'Dist_id_auxiliar'], inplace=True)
+    df_segmentation_customer = df_segmentation_customer[~df_segmentation_customer.index.duplicated(keep='first')]
+
+    columns_to_be_iterated = df_new_stores_catalogue.columns[4:-3]
+
+    for single_stores_key in df_new_stores_catalogue.index.unique():
+        for single_column in columns_to_be_iterated:
+            try:
+                df_new_stores_catalogue.loc[(single_stores_key), single_column] = df_segmentation_customer.loc[(single_stores_key), single_column]
+            except KeyError as error:
+                print('{} - Not possible assign the referred key to the column {}'.format(error, single_column))
+
+    df_new_stores_catalogue.reset_index(drop=True, inplace=True)
+    return (True, [df_new_stores_catalogue])
+
 
 def creating_folders(destination_path, valid_automation_distributors):
 
@@ -708,13 +739,14 @@ def main():
             dist_names_path = content_defining_paths[2]
             product_master_path = content_defining_paths[3]
             sku_map_path = content_defining_paths[4]
+            segmentation_customer_path = content_defining_paths[5]
         else:
             sys.exit()
 
     try:
         print('loading_frames')
         success_loading_frames , content_loading_frames = loading_frames(automation_template_path, customer_catalogue_path, dist_names_path,
-            product_master_path, sku_map_path)
+            product_master_path, sku_map_path, segmentation_customer_path)
     except Exception as error:
         print('{} - Error loading_frames'.format(error))
         sys.exit()
@@ -725,6 +757,7 @@ def main():
             df_dist_names = content_loading_frames[2]
             df_sku_map = content_loading_frames[3]
             df_sap_codes_vs_chains = content_loading_frames[4]
+            df_segmentation_customer = content_loading_frames[5]
         else:
             sys.exit()
         
@@ -975,6 +1008,19 @@ def main():
         finally:
             if success_generating_new_stores_df:
                 df_new_stores_catalogue = content_generating_new_stores_df[0]
+            else:
+                sys.exit()
+        
+        try:
+            print('filling_df_new_stores_with_segmentation_customer_information')
+            success_filling_df_new_stores_with_segmentation_customer_information, content_filling_df_new_stores_with_segmentation_customer_information = filling_df_new_stores_with_segmentation_customer_information(
+                df_new_stores_catalogue, df_segmentation_customer)
+        except Exception as error:
+            print('{} - Error generating_new_stores_df'.format(error))
+            sys.exit()
+        finally:
+            if success_filling_df_new_stores_with_segmentation_customer_information:
+                df_new_stores_catalogue = content_filling_df_new_stores_with_segmentation_customer_information[0]
             else:
                 sys.exit()
 
