@@ -473,11 +473,12 @@ def generating_list_of_unmapped_stores(df_automation, df_customer_catalogue):
         return (False, [])
     
     try:
+        concatenated_indexes_with_store_name = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'] +';'+ df_automation['Store_Name'])
         #Concatenating triple index in order to try to make 'if' condition lighter than multindex
         concatenated_indexes_automation = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'])
         list_of_all_stores_in_customer_catalogue = (df_customer_catalogue['Country'] +';'+ df_customer_catalogue['Distributor_id'] +';'+ df_customer_catalogue['Store_id']).unique().tolist()
         indexes_df_unmapped_stores = ~concatenated_indexes_automation.isin(list_of_all_stores_in_customer_catalogue)
-        list_of_unmapped_stores = concatenated_indexes_automation[indexes_df_unmapped_stores].unique()
+        list_of_unmapped_stores = concatenated_indexes_with_store_name[indexes_df_unmapped_stores].unique()
     except Exception as error:
         print('{} - Error generating_new_stores_df. Cod 02'.format(error))
         return (False, [])
@@ -490,16 +491,18 @@ def generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores):
 
     try:
         for single_store in list_of_unmapped_stores:
-            triple_key_list = single_store.split(';')
-            country = triple_key_list[0]
-            distributor_id = triple_key_list[1]
-            store_number = triple_key_list[2]
+            forth_key_list = single_store.split(';')
+            country = forth_key_list[0]
+            distributor_id = forth_key_list[1]
+            store_number = forth_key_list[2]
+            store_name = forth_key_list[3]
 
             lengh_df_new_stores_catalogue = len(df_new_stores_catalogue)
 
             df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Country'] = country
             df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'SAP_Code'] = distributor_id
             df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Nbr'] = store_number
+            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Name'] = store_name
         df_new_stores_catalogue['COU'] = 0
     except Exception as error:
         print('{} - Error generating_new_stores_df'.format(error))
