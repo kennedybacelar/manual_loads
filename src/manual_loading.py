@@ -8,67 +8,54 @@ sys.path.insert(1, '../log')
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 pd.options.mode.chained_assignment = None
 
-def getting_destination_path():
 
-    destination_path = input('Please paste the path where files will be placed\n').replace('\\', '/')
-    return (True, [destination_path])
+DESTINATION_PATH = input('Please paste the path where files will be placed\n').replace('\\', '/')
 
-def defining_paths():
+ALL_TEMPLATE_FILES_PATH = '../../../Catalogues_Manual_Loads/'
 
-    all_template_files_path = '../../../Catalogues_Manual_Loads/'
-
-    automation_template_path = all_template_files_path + 'automation_template.xlsx'
-    customer_catalogue_path = all_template_files_path + 'customer_catalogue.xlsx'
-    dist_names_path = all_template_files_path + 'dist_names.xlsx'
-    product_master_path = all_template_files_path + 'product_master.xlsx'
-    sku_map_path = all_template_files_path + 'sku_map.xlsx'
-    segmentation_customer_path = all_template_files_path + 'segmentation_customer.xlsx'
-
-    return (True, 
-            [automation_template_path, 
-            customer_catalogue_path,
-            dist_names_path,
-            product_master_path,
-            sku_map_path,
-            segmentation_customer_path])
+AUTOMATION_TEMPLATE_PATH = ALL_TEMPLATE_FILES_PATH + 'automation_template.xlsx'
+CUSTOMER_CATALOGUE_PATH = ALL_TEMPLATE_FILES_PATH + 'customer_catalogue.xlsx'
+DIST_NAMES_PATH = ALL_TEMPLATE_FILES_PATH + 'dist_names.xlsx'
+PRODUCT_MASTER_PATH = ALL_TEMPLATE_FILES_PATH + 'product_master.xlsx'
+SKU_MAP_PATH = ALL_TEMPLATE_FILES_PATH + 'sku_map.xlsx'
+SEGMENTATION_CUSTOMER_PATH = ALL_TEMPLATE_FILES_PATH + 'segmentation_customer.xlsx'
     
 
-def loading_frames(automation_template_path, customer_catalogue_path, dist_names_path,
-    product_master_path, sku_map_path, segmentation_customer_path):
+def loading_frames():
 
     try:
-        df_automation = pd.read_excel(automation_template_path, dtype=str, header=0).fillna('')
+        df_automation = pd.read_excel(AUTOMATION_TEMPLATE_PATH, dtype=str, header=0).fillna('')
     except Exception as error:
         print(error)
         return (False, [])
     
     try:
-        df_customer_catalogue = pd.read_excel(customer_catalogue_path, dtype=str).fillna('')
+        df_customer_catalogue = pd.read_excel(CUSTOMER_CATALOGUE_PATH, dtype=str).fillna('')
     except Exception as error:
         print(error)
         return (False, [])
     
     try:
-        df_dist_names = pd.read_excel(dist_names_path, dtype=str).fillna('')
+        df_dist_names = pd.read_excel(DIST_NAMES_PATH, dtype=str).fillna('')
     except Exception as error:
         print(error)
         return (False, [])
     
     try:
-        df_sku_map = pd.read_excel(sku_map_path, dtype=str).fillna('')
+        df_sku_map = pd.read_excel(SKU_MAP_PATH, dtype=str).fillna('')
     except Exception as error:
         print(error)
         return (False, [])
     
     try:
-        df_sap_codes_vs_chains = pd.read_excel(dist_names_path, dtype=str,
+        df_sap_codes_vs_chains = pd.read_excel(DIST_NAMES_PATH, dtype=str,
             sheet_name='sap_codes_vs_chains').fillna('')
     except Exception as error:
         print(error)
         return (False, [])
     
     try:
-        df_segmentation_customer = pd.read_excel(segmentation_customer_path, dtype=str,
+        df_segmentation_customer = pd.read_excel(SEGMENTATION_CUSTOMER_PATH, dtype=str,
             sheet_name='Sheet1').fillna('')
     except Exception as error:
         print(error)
@@ -542,10 +529,10 @@ def filling_df_new_stores_with_segmentation_customer_information(df_new_stores_c
     return (True, [df_new_stores_catalogue])
 
 
-def creating_folders(destination_path, valid_automation_distributors):
+def creating_folders(DESTINATION_PATH, valid_automation_distributors):
 
     try:
-        os.chdir(destination_path)
+        os.chdir(DESTINATION_PATH)
         for single_valid_dist in valid_automation_distributors:
             country, dist_code = single_valid_dist
             folder_name = country + '_' + dist_code
@@ -717,36 +704,8 @@ def generating_customer_catalogue_files(df_new_stores_catalogue):
 def main():
 
     try:
-        print('getting_destination_path')
-        success_getting_destination_path, content_getting_destination_path = getting_destination_path()
-    except Exception as error:
-        print('{} - Error getting_destination_path'.format(error))
-        sys.exit()
-    finally:
-        if success_getting_destination_path:
-            destination_path = content_getting_destination_path[0]
-        
-    try:
-        print('defining_paths')
-        success_defining_paths, content_defining_paths = defining_paths()
-    except Exception as error:
-        print('{} - Error defining_paths')
-        sys.exit()
-    finally:
-        if success_defining_paths:
-            automation_template_path = content_defining_paths[0]
-            customer_catalogue_path = content_defining_paths[1]
-            dist_names_path = content_defining_paths[2]
-            product_master_path = content_defining_paths[3]
-            sku_map_path = content_defining_paths[4]
-            segmentation_customer_path = content_defining_paths[5]
-        else:
-            sys.exit()
-
-    try:
         print('loading_frames')
-        success_loading_frames , content_loading_frames = loading_frames(automation_template_path, customer_catalogue_path, dist_names_path,
-            product_master_path, sku_map_path, segmentation_customer_path)
+        success_loading_frames , content_loading_frames = loading_frames()
     except Exception as error:
         print('{} - Error loading_frames'.format(error))
         sys.exit()
@@ -1026,7 +985,7 @@ def main():
 
     try:
         print('creating_folders')
-        creating_folders(destination_path, valid_automation_distributors)
+        creating_folders(DESTINATION_PATH, valid_automation_distributors)
     except Exception as error:
         print('{} - Error creating_folders'.format(error))
         sys.exit()
