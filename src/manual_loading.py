@@ -23,45 +23,16 @@ SEGMENTATION_CUSTOMER_PATH = ALL_TEMPLATE_FILES_PATH + 'segmentation_customer.xl
 
 def loading_frames():
 
-    try:
-        df_automation = pd.read_excel(AUTOMATION_TEMPLATE_PATH, dtype=str, header=0).fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    try:
-        df_customer_catalogue = pd.read_excel(CUSTOMER_CATALOGUE_PATH, dtype=str).fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    try:
-        df_dist_names = pd.read_excel(DIST_NAMES_PATH, dtype=str).fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    try:
-        df_sku_map = pd.read_excel(SKU_MAP_PATH, dtype=str).fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    try:
-        df_sap_codes_vs_chains = pd.read_excel(DIST_NAMES_PATH, dtype=str,
+    df_automation = pd.read_excel(AUTOMATION_TEMPLATE_PATH, dtype=str, header=0).fillna('')
+    df_customer_catalogue = pd.read_excel(CUSTOMER_CATALOGUE_PATH, dtype=str).fillna('')
+    df_dist_names = pd.read_excel(DIST_NAMES_PATH, dtype=str).fillna('')
+    df_sku_map = pd.read_excel(SKU_MAP_PATH, dtype=str).fillna('')
+    df_sap_codes_vs_chains = pd.read_excel(DIST_NAMES_PATH, dtype=str,
             sheet_name='sap_codes_vs_chains').fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    try:
-        df_segmentation_customer = pd.read_excel(SEGMENTATION_CUSTOMER_PATH, dtype=str,
+    df_segmentation_customer = pd.read_excel(SEGMENTATION_CUSTOMER_PATH, dtype=str,
             sheet_name='Sheet1').fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
     
-    return (True, [df_automation, df_customer_catalogue, df_dist_names, df_sku_map, df_sap_codes_vs_chains, df_segmentation_customer])
+    return df_automation, df_customer_catalogue, df_dist_names, df_sku_map, df_sap_codes_vs_chains, df_segmentation_customer
 
 
 def declaring_sales_file_final_format():
@@ -75,7 +46,7 @@ def declaring_sales_file_final_format():
 
     df_sales = pd.DataFrame(columns=sales_file_columns).fillna('')
 
-    return (True, [df_sales])
+    return df_sales
 
 
 def declaring_stock_file_final_format():
@@ -87,56 +58,41 @@ def declaring_stock_file_final_format():
 
     df_stock = pd.DataFrame(columns=stock_file_columns).fillna('')
 
-    return (True, [df_stock])
+    return df_stock
 
 
 def sanitizing_df_automation(df_automation):
 
-    try:
-        df_automation['Data_Type'] = df_automation['Data_Type'].str.lower()
-        df_automation['Data_Type'] = df_automation['Data_Type'].str.strip()
-        df_automation['Distributor_id'] = df_automation['Distributor_id'].str.replace('[^a-zA-Z0-9-áéíóú]+', '')
-        df_automation['Distributor_id'] = df_automation['Distributor_id'].str.lower()
-        df_automation['Chain_Product_Code'] = df_automation['Chain_Product_Code'].str.lstrip('0')
-        df_automation['Store_Number'] = df_automation['Store_Number'].str.lstrip('0')
-        df_automation['Store_Number'] = df_automation['Store_Number'].str.strip()
-        df_automation['Store_Number'] = df_automation['Store_Number'].str[:12]
-        df_automation['Country'] = df_automation['Country'].str.lower()
-        df_automation['Country'] = df_automation['Country'].str.strip()
-        df_automation['Store_Name'] = df_automation['Store_Name'].str[:100]
-        df_automation['Invoice_Date'] = df_automation['Invoice_Date'].str.strip()
-        df_automation['Chain_Product_Code'] = df_automation['Chain_Product_Code'].str.strip()
-    except KeyError as error:
-        print('{} - Column not found'.format(error))
-    except Exception as error:
-        print(error)
-        return (False, [])
+    for column in df_automation.columns:
+        df_automation[column] = df_automation[column].str.strip()
+
+    df_automation['Data_Type'] = df_automation['Data_Type'].str.lower()
+    df_automation['Distributor_id'] = df_automation['Distributor_id'].str.replace('[^a-zA-Z0-9-áéíóú]+', '')
+    df_automation['Distributor_id'] = df_automation['Distributor_id'].str.lower()
+    df_automation['Chain_Product_Code'] = df_automation['Chain_Product_Code'].str.lstrip('0')
+    df_automation['Store_Number'] = df_automation['Store_Number'].str.lstrip('0')
+    df_automation['Store_Number'] = df_automation['Store_Number'].str[:12]
+    df_automation['Country'] = df_automation['Country'].str.lower()
+    df_automation['Store_Name'] = df_automation['Store_Name'].str[:100]
     
-    return (True, [df_automation])
+    return df_automation
 
 
 def df_automation_wrong_data_type_column_inputs(df_automation):
 
-    try:
-        filter_wrong_data = df_automation[(df_automation['Data_Type'] != 'sales') & (df_automation['Data_Type'] != 'stock')].index
-        df_automation.drop(filter_wrong_data, inplace=True)
-    except Exception as error:
-        print(error)
-        return (False, [])
+    filter_wrong_data = df_automation[(df_automation['Data_Type'] != 'sales') & (df_automation['Data_Type'] != 'stock')].index
+    df_automation.drop(filter_wrong_data, inplace=True)
     
-    return (True, [df_automation])
+    return df_automation
 
 
 def sanitizing_df_sap_codes_vs_chains(df_sap_codes_vs_chains):
 
-    try:
-        df_sap_codes_vs_chains['Distributor_alias'] = df_sap_codes_vs_chains['Distributor_alias'].str.replace('[^a-zA-Z0-9-áéíóú]+', '')
-        df_sap_codes_vs_chains['Distributor_alias'] = df_sap_codes_vs_chains['Distributor_alias'].str.lower()
-    except Exception as error:
-        print(error)
-        return (False, [])
+
+    df_sap_codes_vs_chains['Distributor_alias'] = df_sap_codes_vs_chains['Distributor_alias'].str.replace('[^a-zA-Z0-9-áéíóú]+', '')
+    df_sap_codes_vs_chains['Distributor_alias'] = df_sap_codes_vs_chains['Distributor_alias'].str.lower()
     
-    return (True, [df_sap_codes_vs_chains])
+    return df_sap_codes_vs_chains
 
 
 def getting_corrected_sap_codes(df_automation, df_sap_codes_vs_chains):
@@ -163,39 +119,29 @@ def getting_corrected_sap_codes(df_automation, df_sap_codes_vs_chains):
     df_automation.reset_index(drop=True, inplace=True)
     df_sap_codes_vs_chains.reset_index(drop=True, inplace=True)
         
-    return (True, [df_automation, not_found_dist_ids])
+    return df_automation, not_found_dist_ids
 
 
 def sanitizing_dist_names(df_dist_names):
 
-    try:
-        df_dist_names['Distributor_country'] = df_dist_names['Distributor_country'].str.strip()
-        df_dist_names['Distributor_name'] = df_dist_names['Distributor_name'].str.strip()
-        df_dist_names['Distributor_Currency'] = df_dist_names['Distributor_Currency'].str.strip()
-        df_dist_names['Distributor_id'] = df_dist_names['Distributor_id'].str.strip()
+    for column in df_dist_names.columns:
+        df_dist_names[column].str.strip()
 
-        #Auxiliar column to be used as key
-        df_dist_names['Country_key'] = df_dist_names['Distributor_country'].str.lower()
-        df_dist_names['Dist_key'] = df_dist_names['Distributor_id']
-    except Exception as error:
-        print('{} - Error sanitizing_dist_names'.format(error))
-        return (False, [])
+    #Auxiliar column to be used as key
+    df_dist_names['Country_key'] = df_dist_names['Distributor_country'].str.lower()
+    df_dist_names['Dist_key'] = df_dist_names['Distributor_id']
     
-    return (True, [df_dist_names])
+    return df_dist_names
 
 
 def getting_corrected_countries(df_automation, df_dist_names):
 
-    try:
-        df_automation['temp_country_key'] = df_automation['Country']
-        df_automation['temp_dist_key'] = df_automation['Distributor_id']
-        df_automation.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
+    df_automation['temp_country_key'] = df_automation['Country']
+    df_automation['temp_dist_key'] = df_automation['Distributor_id']
+    df_automation.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
 
-        df_dist_names.set_index(['Country_key', 'Dist_key'], inplace=True)
-        df_dist_names = df_dist_names[~df_dist_names.index.duplicated(keep='first')]
-    except Exception as error:
-        print('{} - Error getting_corrected_countries - Cod: 01'.format(error))
-        return (False, [])
+    df_dist_names.set_index(['Country_key', 'Dist_key'], inplace=True)
+    df_dist_names = df_dist_names[~df_dist_names.index.duplicated(keep='first')]
 
     valid_automation_distributors = list()
     not_valid_distributors = list()
@@ -208,13 +154,10 @@ def getting_corrected_countries(df_automation, df_dist_names):
         except KeyError as error:
             print('{}: {} - Distributor not Found Cod: 02'.format(error, single_key_automation_dist_and_country))
             not_valid_distributors.append(single_key_automation_dist_and_country)
-        except Exception as error:
-            print('{} - Error getting_corrected_countries'.format(error))
-            return (False, [])
     
     df_automation.reset_index(drop=True, inplace=True)
     df_dist_names.reset_index(drop=True, inplace=True)
-    return (True, [df_automation, valid_automation_distributors, not_valid_distributors])
+    return df_automation, valid_automation_distributors, not_valid_distributors
 
 
 def removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors):
@@ -235,7 +178,7 @@ def removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors
         return (False, [])
     
     df_automation.reset_index(drop=True, inplace=True)
-    return (True, [df_automation])
+    return df_automation
 
 
 def creating_new_skus_map_dataframe():
@@ -246,7 +189,7 @@ def creating_new_skus_map_dataframe():
     ]
 
     df_unmapped_skus = pd.DataFrame(columns=sku_map_columns)
-    return (True, [df_unmapped_skus])
+    return df_unmapped_skus
     
 
 def mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus):
@@ -705,138 +648,82 @@ def main():
 
     try:
         print('loading_frames')
-        success_loading_frames , content_loading_frames = loading_frames()
+        df_automation, df_customer_catalogue, df_dist_names, df_sku_map, df_sap_codes_vs_chains, df_segmentation_customer = loading_frames()
     except Exception as error:
         print('{} - Error loading_frames'.format(error))
-        sys.exit()
-    finally:
-        if success_loading_frames:
-            df_automation = content_loading_frames[0]
-            df_customer_catalogue = content_loading_frames[1]
-            df_dist_names = content_loading_frames[2]
-            df_sku_map = content_loading_frames[3]
-            df_sap_codes_vs_chains = content_loading_frames[4]
-            df_segmentation_customer = content_loading_frames[5]
-        else:
-            sys.exit()
+        sys.exit(1)
         
     try:
         print('declaring_sales_file_final_format')
-        success_declaring_sales_file_final_format, content_declaring_sales_file_final_format = declaring_sales_file_final_format()
+        df_sales = declaring_sales_file_final_format()
     except Exception as error:
         print('{} - Error declaring_sales_file_final_format'.format(error))
         sys.exit()
-    finally:
-        if success_declaring_sales_file_final_format:
-            df_sales = content_declaring_sales_file_final_format[0]
 
     try:
         print('declaring_stock_file_final_format')
-        success_declaring_stock_file_final_format , content_declaring_stock_file_final_format = declaring_stock_file_final_format()
+        df_stock = declaring_stock_file_final_format()
     except Exception as error:
         print('{} - Error declaring_stock_file_final_format'.format(error))
-        sys.exit()
-    finally:
-        if success_declaring_stock_file_final_format:
-            df_stock = content_declaring_stock_file_final_format[0]
+        sys.exit(1)
     
     try:
         print('sanitizing_df_automation')
-        success_sanitizing_df_automation , content_sanitizing_df_automation = sanitizing_df_automation(df_automation)
+        df_automation = sanitizing_df_automation(df_automation)
     except Exception as error:
         print('{} - Error sanitizing_df_automation'.format(error))
-        sys.exit()
-    finally:
-        if success_sanitizing_df_automation:
-            df_automation = content_sanitizing_df_automation[0]
-        else:
-            sys.exit()
+        sys.exit(1)
 
     try:
         print('df_automation_wrong_data_type_column_inputs')
-        success_df_automation_wrong_data_type_column_inputs , content_df_automation_wrong_data_type_column_inputs = df_automation_wrong_data_type_column_inputs(df_automation)
+        df_automation = df_automation_wrong_data_type_column_inputs(df_automation)
     except Exception as error:
         print('{} - Error df_automation_wrong_data_type_column_inputs')
-        sys.exit()
-    finally:
-        if success_df_automation_wrong_data_type_column_inputs:
-            df_automation = content_df_automation_wrong_data_type_column_inputs[0]
-        else:
-            sys.exit()
+        sys.exit(1)
 
     try:
         print('sanitizing_df_sap_codes_vs_chains')
-        success_sanitizing_df_sap_codes_vs_chains ,content_sanitizing_df_sap_codes_vs_chains = sanitizing_df_sap_codes_vs_chains(df_sap_codes_vs_chains)
+        df_sap_codes_vs_chains = sanitizing_df_sap_codes_vs_chains(df_sap_codes_vs_chains)
     except Exception as error:
         print('{} - Error sanitizing_df_sap_codes_vs_chains'.format(error))
-        sys.exit()
-    finally:
-        if success_sanitizing_df_sap_codes_vs_chains:
-            df_sap_codes_vs_chains = content_sanitizing_df_sap_codes_vs_chains[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('getting_corrected_sap_codes') 
-        success_getting_corrected_sap_codes, content_getting_corrected_sap_codes = getting_corrected_sap_codes(df_automation, df_sap_codes_vs_chains)
+        df_automation, _not_found_dist_ids = getting_corrected_sap_codes(df_automation, df_sap_codes_vs_chains)
     except Exception as error:
         print('{} - Error getting_corrected_sap_codes')
-        sys.exit()
-    finally:
-        if success_getting_corrected_sap_codes:
-            df_automation = content_getting_corrected_sap_codes[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('sanitizing_dist_names')
-        success_sanitizing_dist_names, content_sanitizing_dist_names = sanitizing_dist_names(df_dist_names)
+        df_dist_names = sanitizing_dist_names(df_dist_names)
     except Exception as error:
         print('{} - Error sanitizing_dist_names')
-        sys.exit()
-    finally:
-        if success_sanitizing_dist_names:
-            df_dist_names = content_sanitizing_dist_names[0]
-        else:
-            sys.exit()
+        sys.exit(1)
 
     try:
         print('getting_corrected_countries')
-        success_getting_corrected_countries, content_getting_corrected_countries = getting_corrected_countries(df_automation, df_dist_names)
+        df_automation, valid_automation_distributors, not_valid_distributors = getting_corrected_countries(df_automation, df_dist_names)
     except Exception as error:
         print('{} - Error getting_corrected_countries'.format(error))
-        sys.exit()
-    finally:
-        if success_getting_corrected_countries:
-            df_automation = content_getting_corrected_countries[0]
-            valid_automation_distributors = content_getting_corrected_countries[1]
-            not_valid_distributors = content_getting_corrected_countries[2]
-        else:
-            sys.exit()
+        sys.exit(1)
 
 
     if not_valid_distributors:
         try:
             print('removing_invalid_keys_of_df_automation')
-            success_removing_invalid_keys_of_df_automation, content_removing_invalid_keys_of_df_automation = removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors)
+            df_automation = removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors)
         except Exception as error:
             print('{} - Error removing_invalid_keys_of_df_automation'.format(error))
-            sys.exit()
-        finally:
-            if success_removing_invalid_keys_of_df_automation:
-                df_automation = content_removing_invalid_keys_of_df_automation[0]
-            else:
-                sys.exit()
+            sys.exit(1)
     
     try:
         print('creating_new_skus_map_dataframe')
-        success_creating_new_skus_map_dataframe, content_creating_new_skus_map_dataframe = creating_new_skus_map_dataframe()
+        df_unmapped_skus = creating_new_skus_map_dataframe()
     except Exception as error:
         print('{} - Error creating_new_skus_map_dataframe'.format(error))
-        sys.exit()
-    finally:
-        if success_creating_new_skus_map_dataframe:
-            df_unmapped_skus = content_creating_new_skus_map_dataframe[0]
+        sys.exit(1)
 
     try:
         print('mapping_new_skus')
