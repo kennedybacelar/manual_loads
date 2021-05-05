@@ -41,7 +41,6 @@ def declaring_sales_file_final_format():
         'Country', 'Diageo Customer ID', 'Diageo Customer Name', 'Invoice number', 'Type of Invoice', 
         'Invoice Date', 'Store code', 'Product Code', 'Quantity', 'Unit of measure', 'Total Amount WITHOUT TAX',
         'Total Amount WITH TAX', 'Currency Code', 'Sales Representative Code'
-
     ]
 
     df_sales = pd.DataFrame(columns=sales_file_columns).fillna('')
@@ -162,21 +161,14 @@ def getting_corrected_countries(df_automation, df_dist_names):
 
 def removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors):
 
-    try:
-        df_automation['temp_country_key'] = df_automation['Country']
-        df_automation['temp_dist_key'] = df_automation['Distributor_id']
-        df_automation.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
-    except Exception as error:
-        print('{} - Error removing_invalid_keys_of_df_automation: Cod01')
-        return (False, [])
 
-    try:
-        indexes_to_be_removed = pd.MultiIndex.from_tuples(not_valid_distributors)
-        df_automation.drop(indexes_to_be_removed, inplace=True)
-    except Exception as error:
-        print('{} - Error removing_invalid_keys_of_df_automation'.format(error))
-        return (False, [])
-    
+    df_automation['temp_country_key'] = df_automation['Country']
+    df_automation['temp_dist_key'] = df_automation['Distributor_id']
+    df_automation.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
+
+    indexes_to_be_removed = pd.MultiIndex.from_tuples(not_valid_distributors)
+    df_automation.drop(indexes_to_be_removed, inplace=True)
+
     df_automation.reset_index(drop=True, inplace=True)
     return df_automation
 
@@ -194,111 +186,90 @@ def creating_new_skus_map_dataframe():
 
 def mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus):
 
-    try:
-        df_sku_map.set_index(['Distributor_SAP_Code', 'Distributor_SKU_Code'], inplace=True)
-        df_sku_map = df_sku_map[~df_sku_map.index.duplicated(keep='first')]
 
-        df_automation.set_index(['Distributor_id', 'Chain_Product_Code'], inplace=True)
-    except Exception as error:
-        print('{} - Error mapping_new_skus Cod: 01'.format(error))
-        return (False, [])
+    df_sku_map.set_index(['Distributor_SAP_Code', 'Distributor_SKU_Code'], inplace=True)
+    df_sku_map = df_sku_map[~df_sku_map.index.duplicated(keep='first')]
+
+    df_automation.set_index(['Distributor_id', 'Chain_Product_Code'], inplace=True)
+
     
-    try:
-        for single_key_automation in df_automation.index.unique():
-                if single_key_automation not in df_sku_map.index:
-                    dist_sap_code, dist_sku_code = single_key_automation
-                    lengh_df_unmapped_skus = len(df_unmapped_skus)
-                    df_unmapped_skus.loc[(lengh_df_unmapped_skus), 'Dist_SAP_Code'] = dist_sap_code
-                    df_unmapped_skus.loc[(lengh_df_unmapped_skus), 'Dist_SKU_Code'] = dist_sku_code
-        df_unmapped_skus['Multiplication_Factor'] = 1
-        df_unmapped_skus['Share_Participation'] = 1
-    except Exception as error:
-        print('{} - Error mapping_new_skus Cod: 02')
-        return (False, [])    
+
+    for single_key_automation in df_automation.index.unique():
+            if single_key_automation not in df_sku_map.index:
+                dist_sap_code, dist_sku_code = single_key_automation
+                lengh_df_unmapped_skus = len(df_unmapped_skus)
+                df_unmapped_skus.loc[(lengh_df_unmapped_skus), 'Dist_SAP_Code'] = dist_sap_code
+                df_unmapped_skus.loc[(lengh_df_unmapped_skus), 'Dist_SKU_Code'] = dist_sku_code
+    df_unmapped_skus['Multiplication_Factor'] = 1
+    df_unmapped_skus['Share_Participation'] = 1
 
     df_automation.reset_index(inplace=True)
-    return (True, [df_automation, df_unmapped_skus])
+    return df_automation, df_unmapped_skus
 
 
 def splitting_sales_and_stock(df_automation):
 
-    try:
-        filt_sales = df_automation['Data_Type'] == 'sales'
-        df_automation_sales = df_automation[filt_sales]
+    filt_sales = df_automation['Data_Type'] == 'sales'
+    df_automation_sales = df_automation[filt_sales]
 
-        filt_stock = df_automation['Data_Type'] == 'stock'
-        df_automation_stock = df_automation[filt_stock]
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    return (True, [df_automation_sales, df_automation_stock])
+    filt_stock = df_automation['Data_Type'] == 'stock'
+    df_automation_stock = df_automation[filt_stock]
+
+    return df_automation_sales, df_automation_stock
 
 
 def assigning_df_automation_to_df_sales(df_automation_sales, df_sales):
 
-    try:
-        df_sales['Country'] = df_automation_sales['Country']
-        df_sales['Diageo Customer ID'] = df_automation_sales['Distributor_id']
-        df_sales['Invoice Date'] = df_automation_sales['Invoice_Date']
-        df_sales['Store code'] = df_automation_sales['Store_Number']
-        df_sales['Product Code'] = df_automation_sales['Chain_Product_Code']
-        df_sales['Quantity'] = df_automation_sales['Quantity']
-        df_sales['Total Amount WITHOUT TAX'] = df_automation_sales['Sales_Without_Tax']
-        df_sales['Total Amount WITH TAX'] = df_automation_sales['Sales_With_Tax']
-    except Exception as error:
-        print('{} - error assigning_df_automation_to_df_sales'.format(error))
-        return (False, [])
 
-    return (True, [df_sales])
+    df_sales['Country'] = df_automation_sales['Country']
+    df_sales['Diageo Customer ID'] = df_automation_sales['Distributor_id']
+    df_sales['Invoice Date'] = df_automation_sales['Invoice_Date']
+    df_sales['Store code'] = df_automation_sales['Store_Number']
+    df_sales['Product Code'] = df_automation_sales['Chain_Product_Code']
+    df_sales['Quantity'] = df_automation_sales['Quantity']
+    df_sales['Total Amount WITHOUT TAX'] = df_automation_sales['Sales_Without_Tax']
+    df_sales['Total Amount WITH TAX'] = df_automation_sales['Sales_With_Tax']
+
+    return df_sales
 
 
 def assigning_df_automation_to_df_stock(df_automation_stock, df_stock):
 
-    try:
-        df_stock['Country'] = df_automation_stock['Country']
-        df_stock['Diageo Customer ID'] = df_automation_stock['Distributor_id']
-        df_stock['Invoice Date'] = df_automation_stock['Invoice_Date']
-        df_stock['Warehouse Number'] = df_automation_stock['Store_Number']
-        df_stock['Product Code'] = df_automation_stock['Chain_Product_Code']
-        df_stock['Quantity'] = df_automation_stock['Quantity']
-        df_stock['Warehouse'] = df_automation_stock['Store_Name']
-    except Exception as error:
-        print('{} - Error assigning_df_automation_to_df_stock'.format(error))
-        return (False, [])
 
-    return (True, [df_stock])
+    df_stock['Country'] = df_automation_stock['Country']
+    df_stock['Diageo Customer ID'] = df_automation_stock['Distributor_id']
+    df_stock['Invoice Date'] = df_automation_stock['Invoice_Date']
+    df_stock['Warehouse Number'] = df_automation_stock['Store_Number']
+    df_stock['Product Code'] = df_automation_stock['Chain_Product_Code']
+    df_stock['Quantity'] = df_automation_stock['Quantity']
+    df_stock['Warehouse'] = df_automation_stock['Store_Name']
+
+    return df_stock
 
 
 def sanitizing_sales_file(df_sales):
+
+    for column in df_sales.columns:
+        df_sales[column] = df_sales[column].str.strip()
+
+    #Removing negative sign from the end of the values (Some samples were found)
+    values_that_end_with_negative_sign_quantity = (df_sales['Quantity'].str[-1] == '-')
+    df_sales.loc[values_that_end_with_negative_sign_quantity, 'Quantity'] = '-' + df_sales.loc[values_that_end_with_negative_sign_quantity, 'Quantity'].str[:-1]
     
-    try:
-        #Striping columns
-        df_sales['Total Amount WITH TAX'] = df_sales['Total Amount WITH TAX'].str.strip()    
-        df_sales['Total Amount WITHOUT TAX'] = df_sales['Total Amount WITHOUT TAX'].str.strip()
-        df_sales['Quantity'] = df_sales['Quantity'].str.strip()
-
-        #Removing negative sign from the end of the values (Some samples were found)
-        values_that_end_with_negative_sign_quantity = (df_sales['Quantity'].str[-1] == '-')
-        df_sales.loc[values_that_end_with_negative_sign_quantity, 'Quantity'] = '-' + df_sales.loc[values_that_end_with_negative_sign_quantity, 'Quantity'].str[:-1]
-        
-        values_that_end_with_negative_sign_total_with_tax = (df_sales['Total Amount WITH TAX'].str[-1] == '-')
-        df_sales.loc[values_that_end_with_negative_sign_total_with_tax, 'Total Amount WITH TAX'] = '-' + df_sales.loc[values_that_end_with_negative_sign_total_with_tax, 'Total Amount WITH TAX'].str[:-1]
-        
-        values_that_end_with_negative_sign_total_without_tax = (df_sales['Total Amount WITHOUT TAX'].str[-1] == '-')
-        df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'] = '-' + df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'].str[:-1]
-
-        #Turning it numeric below quantities
-        df_sales['Quantity'] = pd.to_numeric(df_sales['Quantity'], errors='coerce').fillna(0)
-        df_sales['Total Amount WITH TAX'] = pd.to_numeric(df_sales['Total Amount WITH TAX'], errors='coerce').fillna(0)
-        df_sales['Total Amount WITHOUT TAX'] = pd.to_numeric(df_sales['Total Amount WITHOUT TAX'], errors='coerce').fillna(0)
+    values_that_end_with_negative_sign_total_with_tax = (df_sales['Total Amount WITH TAX'].str[-1] == '-')
+    df_sales.loc[values_that_end_with_negative_sign_total_with_tax, 'Total Amount WITH TAX'] = '-' + df_sales.loc[values_that_end_with_negative_sign_total_with_tax, 'Total Amount WITH TAX'].str[:-1]
     
-        df_sales = df_sales.fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
+    values_that_end_with_negative_sign_total_without_tax = (df_sales['Total Amount WITHOUT TAX'].str[-1] == '-')
+    df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'] = '-' + df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'].str[:-1]
 
-    return (True, [df_sales])
+    #Turning it numeric below quantities
+    df_sales['Quantity'] = pd.to_numeric(df_sales['Quantity'], errors='coerce').fillna(0)
+    df_sales['Total Amount WITH TAX'] = pd.to_numeric(df_sales['Total Amount WITH TAX'], errors='coerce').fillna(0)
+    df_sales['Total Amount WITHOUT TAX'] = pd.to_numeric(df_sales['Total Amount WITHOUT TAX'], errors='coerce').fillna(0)
+
+    df_sales = df_sales.fillna('')
+
+    return df_sales
         
 
 def filling_sales_information(df_sales, df_dist_names):
@@ -727,65 +698,39 @@ def main():
 
     try:
         print('mapping_new_skus')
-        success_mapping_new_skus, content_mapping_new_skus = mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus)
+        df_automation, df_unmapped_skus = mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus)
     except Exception as error:
         print('{} - Error mapping_new_skus'.format(error))
-        sys.exit()
-    finally:
-        if success_mapping_new_skus:
-            df_automation = content_mapping_new_skus[0]
-            df_unmapped_skus = content_mapping_new_skus[1]
-        else:
-            sys.exit()
+        sys.exit(1)
+
 
     try:
         print('splitting_sales_and_stock')
-        success_splitting_sales_and_stock, content_splitting_sales_and_stock = splitting_sales_and_stock(df_automation)
+        df_automation_sales, df_automation_stock = splitting_sales_and_stock(df_automation)
     except Exception as error:
         print('{} - Error splitting_sales_and_stock'.format(error))
-        sys.exit()
-    finally:
-        if success_splitting_sales_and_stock:
-            df_automation_sales = content_splitting_sales_and_stock[0]
-            df_automation_stock = content_splitting_sales_and_stock[1]
-        else:
-            sys.exit()
+        sys.exit(1)
 
     try:
         print('assigning_df_automation_to_df_sales')
-        success_assigning_df_automation_to_df_sales, content_assigning_df_automation_to_df_sales = assigning_df_automation_to_df_sales(df_automation_sales, df_sales)
+        df_sales = assigning_df_automation_to_df_sales(df_automation_sales, df_sales)
     except Exception as error:
         print('{} - Error assigning_df_automation_to_df_sales'.format(error))
-        sys.exit()
-    finally:
-        if success_assigning_df_automation_to_df_sales:
-            df_sales = content_assigning_df_automation_to_df_sales[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('assigning_df_automation_to_df_stock')
-        success_assigning_df_automation_to_df_stock, content_assigning_df_automation_to_df_stock = assigning_df_automation_to_df_stock(df_automation_stock, df_stock)
+        df_stock = assigning_df_automation_to_df_stock(df_automation_stock, df_stock)
     except Exception as error:
         print('{} - Error assigning_df_automation_to_df_stock')
-        sys.exit()
-    finally:
-        if success_assigning_df_automation_to_df_stock:
-            df_stock = content_assigning_df_automation_to_df_stock[0]
-        else:
-            sys.exit()
+        sys.exit(1)
 
     try:
         print('sanitizing_sales_file')
-        success_sanitizing_sales_file, content_sanitizing_sales_file = sanitizing_sales_file(df_sales)
+        df_sales = sanitizing_sales_file(df_sales)
     except Exception as error:
         print('{} - Error sanitizing_sales_file'.format(error))
-        sys.exit()
-    finally:
-        if success_sanitizing_sales_file:
-            df_sales = content_sanitizing_sales_file[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('filling_sales_information')
