@@ -274,19 +274,15 @@ def sanitizing_sales_file(df_sales):
 
 def filling_sales_information(df_sales, df_dist_names):
 
-    try:
-        df_sales['temp_country_key'] = df_sales['Country'].str.lower()
-        df_sales['temp_dist_key'] = df_sales['Diageo Customer ID']
-        df_sales.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
+    df_sales['temp_country_key'] = df_sales['Country'].str.lower()
+    df_sales['temp_dist_key'] = df_sales['Diageo Customer ID']
+    df_sales.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
 
-        #df_dist_names are already set and they are ['Country_key', 'Distributor_id']
-        df_dist_names = df_dist_names[~df_dist_names.index.duplicated(keep='first')]
+    #df_dist_names are already set and they are ['Country_key', 'Distributor_id']
+    df_dist_names = df_dist_names[~df_dist_names.index.duplicated(keep='first')]
 
-        #Hard-coding below column
-        df_sales['Unit of measure'] = 'BTL'
-    except Exception as error:
-        print('{} - Error when filling_sales_information Cod: 01'.format(error))
-        return (False, [])
+    #Hard-coding below column
+    df_sales['Unit of measure'] = 'BTL'
 
     for single_key_sales in df_sales.index.unique():
         try:
@@ -297,28 +293,22 @@ def filling_sales_information(df_sales, df_dist_names):
             df_sales.loc[(single_key_sales), 'Currency Code'] = currency
         except KeyError as error:
             print('{} - Distributor not found'.format(error))
-        except Exception as error:
-            print('{} - Error when filling_sales_information Cod: 02'.format(error))
-            return (False, [])
 
-    #Keeping the dist names and sales with index set - So not needed setting index again
+    #Keeping the dist names with index set - So not needed setting index again
 
     df_sales.reset_index(drop=True, inplace=True)
-    return (True, [df_sales])
+    return df_sales
 
 
 def filling_stock_information(df_stock, df_dist_names):
     
-    try:
-        df_stock['temp_country_key'] = df_stock['Country'].str.lower()
-        df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
-        df_stock.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
 
-        #Hard-coding below column
-        df_stock['Unit of measure'] = 'BTL'
-    except Exception as error:
-        print('{} - Error filling_stock_information Cod: 01'.format(error))
-        return (False, [])
+    df_stock['temp_country_key'] = df_stock['Country'].str.lower()
+    df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
+    df_stock.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
+
+    #Hard-coding below column
+    df_stock['Unit of measure'] = 'BTL'
 
     for single_key_stock in df_stock.index.unique():
         try:
@@ -326,27 +316,21 @@ def filling_stock_information(df_stock, df_dist_names):
             df_stock.loc[(single_key_stock), 'Diageo Customer Name'] = correct_dist_name
         except KeyError as error:
             print('{} - Stock - Distributor not found'.format(error))
-        except Exception as error:
-            print('{} - Error filling_stock_information Cod: 02'.format(error))
-            return (False, [])
 
     df_stock.reset_index(drop=True, inplace=True)
-    return (True, [df_stock])
+    return df_stock
 
 
 def getting_stock_store_names(df_stock, df_customer_catalogue):
 
-    try:
-        df_customer_catalogue.set_index(['Country', 'Distributor_id', 'Store_id'], inplace=True)
-        df_customer_catalogue = df_customer_catalogue[~df_customer_catalogue.index.duplicated(keep='first')]
+    df_customer_catalogue.set_index(['Country', 'Distributor_id', 'Store_id'], inplace=True)
+    df_customer_catalogue = df_customer_catalogue[~df_customer_catalogue.index.duplicated(keep='first')]
 
-        df_stock['temp_country_key'] = df_stock['Country']
-        df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
-        df_stock['temp_store_id'] = df_stock['Warehouse Number']
-        df_stock.set_index(['temp_country_key', 'temp_dist_key', 'temp_store_id'], inplace=True)
-    except Exception as error:
-        print('{} - Error getting_stock_store_names Cod: 01'.format(error))
-        return (False, [])
+    df_stock['temp_country_key'] = df_stock['Country']
+    df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
+    df_stock['temp_store_id'] = df_stock['Warehouse Number']
+    df_stock.set_index(['temp_country_key', 'temp_dist_key', 'temp_store_id'], inplace=True)
+
     
     for individual_stock_key in df_stock.index.unique():
         try:
@@ -355,10 +339,10 @@ def getting_stock_store_names(df_stock, df_customer_catalogue):
         except KeyError as error:
             print('{} - Store does not exist in customer catalogue file'.format(error))
         except Exception as error:
-            print('{} - getting_stock_store_names Cod: 02',format(error))
+            print('{} - getting_stock_store_names Cod: 02'.format(error))
     
     df_stock.reset_index(drop=True, inplace=True)
-    return (True, [df_stock])
+    return df_stock
 
 
 def creating_new_stores_dataframe():
@@ -371,7 +355,7 @@ def creating_new_stores_dataframe():
         'State or Region', 'Country', 'COU'
         ]
     df_new_stores_catalogue = pd.DataFrame(columns=new_stores_catalogue_columns)
-    return (True, [df_new_stores_catalogue])
+    return df_new_stores_catalogue
 
 
 def generating_list_of_unmapped_stores(df_automation, df_customer_catalogue):
@@ -734,48 +718,30 @@ def main():
     
     try:
         print('filling_sales_information')
-        success_filling_sales_information, content_filling_sales_information = filling_sales_information(df_sales, df_dist_names)
+        df_sales = filling_sales_information(df_sales, df_dist_names)
     except Exception as error:
         print('{} - Error filling_sales_information'.format(error))
-        sys.exit()
-    finally:
-        if success_filling_sales_information:
-            df_sales = content_filling_sales_information[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('filling_stock_information')
-        success_filling_stock_information, content_filling_stock_information = filling_stock_information(df_stock, df_dist_names)
+        df_stock = filling_stock_information(df_stock, df_dist_names)
     except Exception as error:
         print('{} - Error filling_stock_information'.format(error))
-        sys.exit()
-    finally:
-        if success_filling_stock_information:
-            df_stock = content_filling_stock_information[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('getting_stock_store_names') 
-        success_getting_stock_store_names, content_getting_stock_store_names = getting_stock_store_names(df_stock, df_customer_catalogue)
+        df_stock = getting_stock_store_names(df_stock, df_customer_catalogue)
     except Exception as error:
         print('{} - Error getting_stock_store_names'.format(error))
-    finally:
-        if success_getting_stock_store_names:
-            df_stock = content_getting_stock_store_names[0]
-        else:
-            sys.exit()
 
     try:
         print('creating_new_stores_dataframe')
-        success_creating_new_stores_dataframe, content_creating_new_stores_dataframe = creating_new_stores_dataframe()
+        df_new_stores_catalogue = creating_new_stores_dataframe()
     except Exception as error:
         print('{} - Error creating_new_stores_dataframe')
-        sys.exit()
-    finally:
-        if success_creating_new_stores_dataframe:
-            df_new_stores_catalogue = content_creating_new_stores_dataframe[0]
+        sys.exit(1)
     
     try:
         print('generating_list_of_unmapped_stores')
