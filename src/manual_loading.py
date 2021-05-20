@@ -360,49 +360,38 @@ def creating_new_stores_dataframe():
 
 def generating_list_of_unmapped_stores(df_automation, df_customer_catalogue):
 
-    try:
-        df_customer_catalogue.reset_index(inplace=True)
-    except Exception as error:
-        print('{} - Error generating_new_stores_df. Cod 01'.format(error))
-        return (False, [])
-    
-    try:
-        concatenated_indexes_with_store_name = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'] +';'+ df_automation['Store_Name'])
-        #Concatenating triple index in order to try to make 'if' condition lighter than multindex
-        concatenated_indexes_automation = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'])
-        list_of_all_stores_in_customer_catalogue = (df_customer_catalogue['Country'] +';'+ df_customer_catalogue['Distributor_id'] +';'+ df_customer_catalogue['Store_id']).unique().tolist()
-        indexes_df_unmapped_stores = ~concatenated_indexes_automation.isin(list_of_all_stores_in_customer_catalogue)
-        list_of_unmapped_stores = concatenated_indexes_with_store_name[indexes_df_unmapped_stores].unique()
-    except Exception as error:
-        print('{} - Error generating_new_stores_df. Cod 02'.format(error))
-        return (False, [])
+    df_customer_catalogue.reset_index(inplace=True)
+
+    concatenated_indexes_with_store_name = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'] +';'+ df_automation['Store_Name'])
+    #Concatenating triple index in order to try to make 'if' condition lighter than multindex
+    concatenated_indexes_automation = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'])
+    list_of_all_stores_in_customer_catalogue = (df_customer_catalogue['Country'] +';'+ df_customer_catalogue['Distributor_id'] +';'+ df_customer_catalogue['Store_id']).unique().tolist()
+    indexes_df_unmapped_stores = ~concatenated_indexes_automation.isin(list_of_all_stores_in_customer_catalogue)
+    list_of_unmapped_stores = concatenated_indexes_with_store_name[indexes_df_unmapped_stores].unique()
+
 
     df_automation.reset_index(inplace=True)
-    return (True, [list_of_unmapped_stores])
+    return list_of_unmapped_stores
 
 
 def generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores):
 
-    try:
-        for single_store in list_of_unmapped_stores:
-            forth_key_list = single_store.split(';')
-            country = forth_key_list[0]
-            distributor_id = forth_key_list[1]
-            store_number = forth_key_list[2]
-            store_name = forth_key_list[3]
+    for single_store in list_of_unmapped_stores:
+        forth_key_list = single_store.split(';')
+        country = forth_key_list[0]
+        distributor_id = forth_key_list[1]
+        store_number = forth_key_list[2]
+        store_name = forth_key_list[3]
 
-            lengh_df_new_stores_catalogue = len(df_new_stores_catalogue)
+        lengh_df_new_stores_catalogue = len(df_new_stores_catalogue)
 
-            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Country'] = country
-            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'SAP_Code'] = distributor_id
-            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Nbr'] = store_number
-            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Name'] = store_name
-        df_new_stores_catalogue['COU'] = 0
-    except Exception as error:
-        print('{} - Error generating_new_stores_df'.format(error))
-        return (False, [])
+        df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Country'] = country
+        df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'SAP_Code'] = distributor_id
+        df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Nbr'] = store_number
+        df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Name'] = store_name
+    df_new_stores_catalogue['COU'] = 0
 
-    return (True, [df_new_stores_catalogue])
+    return df_new_stores_catalogue
 
 def filling_df_new_stores_with_segmentation_customer_information(df_new_stores_catalogue, 
     df_segmentation_customer):
@@ -424,23 +413,18 @@ def filling_df_new_stores_with_segmentation_customer_information(df_new_stores_c
                 print('{} - Not possible assign the referred key to the column {}'.format(error, single_column))
 
     df_new_stores_catalogue.reset_index(drop=True, inplace=True)
-    return (True, [df_new_stores_catalogue])
+    return df_new_stores_catalogue
 
 
 def creating_folders(DESTINATION_PATH, valid_automation_distributors):
 
-    try:
-        os.chdir(DESTINATION_PATH)
-        for single_valid_dist in valid_automation_distributors:
-            country, dist_code = single_valid_dist
-            folder_name = country + '_' + dist_code
-            if not os.path.exists(folder_name):
-                os.mkdir(folder_name)
-    except Exception as error:
-        print('{} - Error creating_folders'.format(error))
-        return (False, [])
-    
-    return (True, [])
+    os.chdir(DESTINATION_PATH)
+    for single_valid_dist in valid_automation_distributors:
+        country, dist_code = single_valid_dist
+        folder_name = country + '_' + dist_code
+        if not os.path.exists(folder_name):
+            os.mkdir(folder_name)
+    return True
 
 
 def writing_files(df_to_be_written, folder_name, file_name, to_be_saved_on_root_directory):
@@ -455,7 +439,7 @@ def writing_files(df_to_be_written, folder_name, file_name, to_be_saved_on_root_
     df_to_be_written[df_to_be_written.columns].to_csv(final_file_path_name,
         encoding='mbcs', sep=';', columns=df_to_be_written.columns, index=False)
     
-    return (True, [])
+    return True
 
 
 def creating_df_not_found_distributors_df():
@@ -497,13 +481,9 @@ def generating_unmapped_skus_file(df_unmapped_skus):
 
 def generating_sales_files(df_sales):
 
-    try:
-        df_sales['Country_key'] = df_sales['Country']
-        df_sales['Dist_key'] = df_sales['Diageo Customer ID']
-        df_sales.set_index(['Country_key', 'Dist_key'], inplace=True)
-    except Exception as error:
-        print('{} - Error generating_sales_files Cod: 01')
-        sys.exit()
+    df_sales['Country_key'] = df_sales['Country']
+    df_sales['Dist_key'] = df_sales['Diageo Customer ID']
+    df_sales.set_index(['Country_key', 'Dist_key'], inplace=True)
 
     #Generating_All_Sales
     try:
@@ -527,28 +507,21 @@ def generating_sales_files(df_sales):
         except Exception as error:
             print('{} {} - Error. Not possible saving Sales file'.format(error, single_sales_key))
     
-    return (True, [])
+    return True
 
 
 def generating_stock_files(df_stock):
 
-    try:
-        df_stock['Country_key'] = df_stock['Country']
-        df_stock['Dist_key'] = df_stock['Diageo Customer ID']
-        df_stock.set_index(['Country_key', 'Dist_key'], inplace=True)
-    except Exception as error:
-        print('{} - Error generating_stock_files Cod: 01')
-        sys.exit()
+    df_stock['Country_key'] = df_stock['Country']
+    df_stock['Dist_key'] = df_stock['Diageo Customer ID']
+    df_stock.set_index(['Country_key', 'Dist_key'], inplace=True)
     
     #Generating_All_Stock
-    try:
-        All_stock_file_name = 'All_Stock'
-        folder_all_stock = ''
-        to_be_saved_on_root_directory = True
-        writing_files(df_stock, folder_all_stock, All_stock_file_name, to_be_saved_on_root_directory)
-    except Exception as error:
-        print('{} - Error. Not possible saving Stock file - ALL'.format(error))
-        return (False, [])
+    All_stock_file_name = 'All_Stock'
+    folder_all_stock = ''
+    to_be_saved_on_root_directory = True
+
+    writing_files(df_stock, folder_all_stock, All_stock_file_name, to_be_saved_on_root_directory)
 
     #Generating stock files by Country/Dist
     for single_stock_key in df_stock.index.unique():
@@ -562,17 +535,13 @@ def generating_stock_files(df_stock):
             writing_files(single_df_stock, folder_name, individual_stock_file_name, to_be_saved_on_root_directory)
         except Exception as error:
             print('{} {} - Error. Not possible saving Stock file'.format(error, single_stock_key))
-    return (True, [])
+    return True
 
 def generating_customer_catalogue_files(df_new_stores_catalogue):
 
-    try:
-        df_new_stores_catalogue['Country_key'] = df_new_stores_catalogue['Country']
-        df_new_stores_catalogue['Dist_key'] = df_new_stores_catalogue['SAP_Code']
-        df_new_stores_catalogue.set_index(['Country_key', 'Dist_key'], inplace=True)
-    except Exception as error:
-        print('{} - Error generating_customer_catalogue_files'.format(error))
-        return (False, [])
+    df_new_stores_catalogue['Country_key'] = df_new_stores_catalogue['Country']
+    df_new_stores_catalogue['Dist_key'] = df_new_stores_catalogue['SAP_Code']
+    df_new_stores_catalogue.set_index(['Country_key', 'Dist_key'], inplace=True)
     
     #Generating_All_customer
     try:
@@ -591,12 +560,9 @@ def generating_customer_catalogue_files(df_new_stores_catalogue):
         folder_name = country_name + '_' + distributor
         to_be_saved_on_root_directory = False
 
-        try:
-            writing_files(single_df_customer, folder_name, individual_customer_file_name, to_be_saved_on_root_directory)
-        except Exception as error:
-            print('{} {} - Not possible saving Customer_Catalogue file'.format(error, single_key_customer))
-            return (False, [])
-    return (True, [])
+        writing_files(single_df_customer, folder_name, individual_customer_file_name, to_be_saved_on_root_directory)
+
+    return True
 
 
 def main():
@@ -745,48 +711,32 @@ def main():
     
     try:
         print('generating_list_of_unmapped_stores')
-        success_generating_list_of_unmapped_stores, content_generating_list_of_unmapped_stores = generating_list_of_unmapped_stores(df_automation, df_customer_catalogue)
+        list_of_unmapped_stores = generating_list_of_unmapped_stores(df_automation, df_customer_catalogue)
     except Exception as error:
         print('{} - Error generating_list_of_unmapped_stores'.format(error))
-        sys.exit()
-    finally:
-        if success_generating_list_of_unmapped_stores:
-            list_of_unmapped_stores = content_generating_list_of_unmapped_stores[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     if len(list_of_unmapped_stores) > 0:
         try:
             print('generating_new_stores_df')
-            success_generating_new_stores_df, content_generating_new_stores_df = generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores)
+            df_new_stores_catalogue = generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores)
         except Exception as error:
             print('{} - Error generating_new_stores_df'.format(error))
-            sys.exit()
-        finally:
-            if success_generating_new_stores_df:
-                df_new_stores_catalogue = content_generating_new_stores_df[0]
-            else:
-                sys.exit()
+            sys.exit(1)
         
         try:
             print('filling_df_new_stores_with_segmentation_customer_information')
-            success_filling_df_new_stores_with_segmentation_customer_information, content_filling_df_new_stores_with_segmentation_customer_information = filling_df_new_stores_with_segmentation_customer_information(
-                df_new_stores_catalogue, df_segmentation_customer)
+            df_new_stores_catalogue = filling_df_new_stores_with_segmentation_customer_information(df_new_stores_catalogue, df_segmentation_customer)
         except Exception as error:
             print('{} - Error generating_new_stores_df'.format(error))
-            sys.exit()
-        finally:
-            if success_filling_df_new_stores_with_segmentation_customer_information:
-                df_new_stores_catalogue = content_filling_df_new_stores_with_segmentation_customer_information[0]
-            else:
-                sys.exit()
+            sys.exit(1)
 
     try:
         print('creating_folders')
         creating_folders(DESTINATION_PATH, valid_automation_distributors)
     except Exception as error:
         print('{} - Error creating_folders'.format(error))
-        sys.exit()
+        sys.exit(1)
     
     if (len(not_valid_distributors) > 0):
         try:
@@ -818,7 +768,7 @@ def main():
             generating_sales_files(df_sales)
         except Exception as error:
             print('{} - Error generating_sales_files'.format(error))
-            sys.exit()
+            sys.exit(1)
 
     if (len(df_stock) > 0):
         try:
@@ -826,19 +776,16 @@ def main():
             generating_stock_files(df_stock)
         except Exception as error:
             print('{} - Error generating_stock_files'.format(error))
-            sys.exit()
+            sys.exit(1)
     
     if (len(list_of_unmapped_stores) > 0):
         try:
             print('generating_customer_catalogue_files')
-            success_generating_customer_catalogue_files ,content_generating_customer_catalogue_files = generating_customer_catalogue_files(df_new_stores_catalogue)
+            generating_customer_catalogue_files(df_new_stores_catalogue)
         except Exception as error:
-            print('{} - Error generating_customer_catalogue_files')
-            sys.exit()
-        finally:
-            if success_generating_customer_catalogue_files:
-                print('Successfully executed')
-                input('')
+            print('{} - Error generating_customer_catalogue_files'.format(error))
+            sys.exit(1)
+    input('Successfully executed!')
 
 
 if __name__ == "__main__":
