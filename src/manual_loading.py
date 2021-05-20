@@ -66,11 +66,9 @@ def sanitizing_df_automation(df_automation):
         df_automation[column] = df_automation[column].str.strip()
 
     df_automation['Data_Type'] = df_automation['Data_Type'].str.lower()
-    df_automation['Distributor_id'] = df_automation['Distributor_id'].str.replace('[^a-zA-Z0-9-áéíóú]+', '')
-    df_automation['Distributor_id'] = df_automation['Distributor_id'].str.lower()
+    df_automation['Distributor_id'] = df_automation['Distributor_id'].str.replace('[^a-zA-Z0-9-áéíóú]+', '').str.lower()
     df_automation['Chain_Product_Code'] = df_automation['Chain_Product_Code'].str.lstrip('0')
-    df_automation['Store_Number'] = df_automation['Store_Number'].str.lstrip('0')
-    df_automation['Store_Number'] = df_automation['Store_Number'].str[:12]
+    df_automation['Store_Number'] = df_automation['Store_Number'].str.lstrip('0').str[:12]
     df_automation['Country'] = df_automation['Country'].str.lower()
     df_automation['Store_Name'] = df_automation['Store_Name'].str[:100]
     
@@ -161,7 +159,6 @@ def getting_corrected_countries(df_automation, df_dist_names):
 
 def removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors):
 
-
     df_automation['temp_country_key'] = df_automation['Country']
     df_automation['temp_dist_key'] = df_automation['Distributor_id']
     df_automation.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
@@ -186,13 +183,10 @@ def creating_new_skus_map_dataframe():
 
 def mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus):
 
-
     df_sku_map.set_index(['Distributor_SAP_Code', 'Distributor_SKU_Code'], inplace=True)
     df_sku_map = df_sku_map[~df_sku_map.index.duplicated(keep='first')]
 
     df_automation.set_index(['Distributor_id', 'Chain_Product_Code'], inplace=True)
-
-    
 
     for single_key_automation in df_automation.index.unique():
             if single_key_automation not in df_sku_map.index:
@@ -220,7 +214,6 @@ def splitting_sales_and_stock(df_automation):
 
 def assigning_df_automation_to_df_sales(df_automation_sales, df_sales):
 
-
     df_sales['Country'] = df_automation_sales['Country']
     df_sales['Diageo Customer ID'] = df_automation_sales['Distributor_id']
     df_sales['Invoice Date'] = df_automation_sales['Invoice_Date']
@@ -234,7 +227,6 @@ def assigning_df_automation_to_df_sales(df_automation_sales, df_sales):
 
 
 def assigning_df_automation_to_df_stock(df_automation_stock, df_stock):
-
 
     df_stock['Country'] = df_automation_stock['Country']
     df_stock['Diageo Customer ID'] = df_automation_stock['Distributor_id']
@@ -263,9 +255,9 @@ def sanitizing_sales_file(df_sales):
     df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'] = '-' + df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'].str[:-1]
 
     #Turning it numeric below quantities
-    df_sales['Quantity'] = pd.to_numeric(df_sales['Quantity'], errors='coerce').fillna(0)
-    df_sales['Total Amount WITH TAX'] = pd.to_numeric(df_sales['Total Amount WITH TAX'], errors='coerce').fillna(0)
-    df_sales['Total Amount WITHOUT TAX'] = pd.to_numeric(df_sales['Total Amount WITHOUT TAX'], errors='coerce').fillna(0)
+    df_sales['Quantity'] = pd.to_numeric(df_sales['Quantity'], errors='coerce').fillna(0).round(2)
+    df_sales['Total Amount WITH TAX'] = pd.to_numeric(df_sales['Total Amount WITH TAX'], errors='coerce').fillna(0).round(2)
+    df_sales['Total Amount WITHOUT TAX'] = pd.to_numeric(df_sales['Total Amount WITHOUT TAX'], errors='coerce').fillna(0).round(2)
 
     df_sales = df_sales.fillna('')
 
@@ -392,6 +384,7 @@ def generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores):
     df_new_stores_catalogue['COU'] = 0
 
     return df_new_stores_catalogue
+
 
 def filling_df_new_stores_with_segmentation_customer_information(df_new_stores_catalogue, 
     df_segmentation_customer):
@@ -536,6 +529,7 @@ def generating_stock_files(df_stock):
         except Exception as error:
             print('{} {} - Error. Not possible saving Stock file'.format(error, single_stock_key))
     return True
+
 
 def generating_customer_catalogue_files(df_new_stores_catalogue):
 
