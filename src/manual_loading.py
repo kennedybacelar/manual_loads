@@ -8,73 +8,31 @@ sys.path.insert(1, '../log')
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 pd.options.mode.chained_assignment = None
 
-def getting_destination_path():
 
-    destination_path = input('Please paste the path where files will be placed\n').replace('\\', '/')
-    return (True, [destination_path])
+DESTINATION_PATH = input('Please paste the path where files will be placed\n').replace('\\', '/')
 
-def defining_paths():
+ALL_TEMPLATE_FILES_PATH = '../../../Catalogues_Manual_Loads/'
 
-    all_template_files_path = '../../../Catalogues_Manual_Loads/'
-
-    automation_template_path = all_template_files_path + 'automation_template.xlsx'
-    customer_catalogue_path = all_template_files_path + 'customer_catalogue.xlsx'
-    dist_names_path = all_template_files_path + 'dist_names.xlsx'
-    product_master_path = all_template_files_path + 'product_master.xlsx'
-    sku_map_path = all_template_files_path + 'sku_map.xlsx'
-    segmentation_customer_path = all_template_files_path + 'segmentation_customer.xlsx'
-
-    return (True, 
-            [automation_template_path, 
-            customer_catalogue_path,
-            dist_names_path,
-            product_master_path,
-            sku_map_path,
-            segmentation_customer_path])
+AUTOMATION_TEMPLATE_PATH = ALL_TEMPLATE_FILES_PATH + 'automation_template.xlsx'
+CUSTOMER_CATALOGUE_PATH = ALL_TEMPLATE_FILES_PATH + 'customer_catalogue.xlsx'
+DIST_NAMES_PATH = ALL_TEMPLATE_FILES_PATH + 'dist_names.xlsx'
+PRODUCT_MASTER_PATH = ALL_TEMPLATE_FILES_PATH + 'product_master.xlsx'
+SKU_MAP_PATH = ALL_TEMPLATE_FILES_PATH + 'sku_map.xlsx'
+SEGMENTATION_CUSTOMER_PATH = ALL_TEMPLATE_FILES_PATH + 'segmentation_customer.xlsx'
     
 
-def loading_frames(automation_template_path, customer_catalogue_path, dist_names_path,
-    product_master_path, sku_map_path, segmentation_customer_path):
+def loading_frames():
 
-    try:
-        df_automation = pd.read_excel(automation_template_path, dtype=str, header=0).fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    try:
-        df_customer_catalogue = pd.read_excel(customer_catalogue_path, dtype=str).fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    try:
-        df_dist_names = pd.read_excel(dist_names_path, dtype=str).fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    try:
-        df_sku_map = pd.read_excel(sku_map_path, dtype=str).fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    try:
-        df_sap_codes_vs_chains = pd.read_excel(dist_names_path, dtype=str,
+    df_automation = pd.read_excel(AUTOMATION_TEMPLATE_PATH, dtype=str, header=0).fillna('')
+    df_customer_catalogue = pd.read_excel(CUSTOMER_CATALOGUE_PATH, dtype=str).fillna('')
+    df_dist_names = pd.read_excel(DIST_NAMES_PATH, dtype=str).fillna('')
+    df_sku_map = pd.read_excel(SKU_MAP_PATH, dtype=str).fillna('')
+    df_sap_codes_vs_chains = pd.read_excel(DIST_NAMES_PATH, dtype=str,
             sheet_name='sap_codes_vs_chains').fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    try:
-        df_segmentation_customer = pd.read_excel(segmentation_customer_path, dtype=str,
+    df_segmentation_customer = pd.read_excel(SEGMENTATION_CUSTOMER_PATH, dtype=str,
             sheet_name='Sheet1').fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
     
-    return (True, [df_automation, df_customer_catalogue, df_dist_names, df_sku_map, df_sap_codes_vs_chains, df_segmentation_customer])
+    return df_automation, df_customer_catalogue, df_dist_names, df_sku_map, df_sap_codes_vs_chains, df_segmentation_customer
 
 
 def declaring_sales_file_final_format():
@@ -83,12 +41,11 @@ def declaring_sales_file_final_format():
         'Country', 'Diageo Customer ID', 'Diageo Customer Name', 'Invoice number', 'Type of Invoice', 
         'Invoice Date', 'Store code', 'Product Code', 'Quantity', 'Unit of measure', 'Total Amount WITHOUT TAX',
         'Total Amount WITH TAX', 'Currency Code', 'Sales Representative Code'
-
     ]
 
     df_sales = pd.DataFrame(columns=sales_file_columns).fillna('')
 
-    return (True, [df_sales])
+    return df_sales
 
 
 def declaring_stock_file_final_format():
@@ -100,56 +57,39 @@ def declaring_stock_file_final_format():
 
     df_stock = pd.DataFrame(columns=stock_file_columns).fillna('')
 
-    return (True, [df_stock])
+    return df_stock
 
 
 def sanitizing_df_automation(df_automation):
 
-    try:
-        df_automation['Data_Type'] = df_automation['Data_Type'].str.lower()
-        df_automation['Data_Type'] = df_automation['Data_Type'].str.strip()
-        df_automation['Distributor_id'] = df_automation['Distributor_id'].str.replace('[^a-zA-Z0-9-áéíóú]+', '')
-        df_automation['Distributor_id'] = df_automation['Distributor_id'].str.lower()
-        df_automation['Chain_Product_Code'] = df_automation['Chain_Product_Code'].str.lstrip('0')
-        df_automation['Store_Number'] = df_automation['Store_Number'].str.lstrip('0')
-        df_automation['Store_Number'] = df_automation['Store_Number'].str.strip()
-        df_automation['Store_Number'] = df_automation['Store_Number'].str[:12]
-        df_automation['Country'] = df_automation['Country'].str.lower()
-        df_automation['Country'] = df_automation['Country'].str.strip()
-        df_automation['Store_Name'] = df_automation['Store_Name'].str[:100]
-        df_automation['Invoice_Date'] = df_automation['Invoice_Date'].str.strip()
-        df_automation['Chain_Product_Code'] = df_automation['Chain_Product_Code'].str.strip()
-    except KeyError as error:
-        print('{} - Column not found'.format(error))
-    except Exception as error:
-        print(error)
-        return (False, [])
+    for column in df_automation.columns:
+        df_automation[column] = df_automation[column].str.strip()
+
+    df_automation['Data_Type'] = df_automation['Data_Type'].str.lower()
+    df_automation['Distributor_id'] = df_automation['Distributor_id'].str.replace('[^a-zA-Z0-9-áéíóú]+', '').str.lower()
+    df_automation['Chain_Product_Code'] = df_automation['Chain_Product_Code'].str.lstrip('0')
+    df_automation['Store_Number'] = df_automation['Store_Number'].str.lstrip('0').str[:12]
+    df_automation['Country'] = df_automation['Country'].str.lower()
+    df_automation['Store_Name'] = df_automation['Store_Name'].str[:100]
     
-    return (True, [df_automation])
+    return df_automation
 
 
 def df_automation_wrong_data_type_column_inputs(df_automation):
 
-    try:
-        filter_wrong_data = df_automation[(df_automation['Data_Type'] != 'sales') & (df_automation['Data_Type'] != 'stock')].index
-        df_automation.drop(filter_wrong_data, inplace=True)
-    except Exception as error:
-        print(error)
-        return (False, [])
+    filter_wrong_data = df_automation[(df_automation['Data_Type'] != 'sales') & (df_automation['Data_Type'] != 'stock')].index
+    df_automation.drop(filter_wrong_data, inplace=True)
     
-    return (True, [df_automation])
+    return df_automation
 
 
 def sanitizing_df_sap_codes_vs_chains(df_sap_codes_vs_chains):
 
-    try:
-        df_sap_codes_vs_chains['Distributor_alias'] = df_sap_codes_vs_chains['Distributor_alias'].str.replace('[^a-zA-Z0-9-áéíóú]+', '')
-        df_sap_codes_vs_chains['Distributor_alias'] = df_sap_codes_vs_chains['Distributor_alias'].str.lower()
-    except Exception as error:
-        print(error)
-        return (False, [])
+
+    df_sap_codes_vs_chains['Distributor_alias'] = df_sap_codes_vs_chains['Distributor_alias'].str.replace('[^a-zA-Z0-9-áéíóú]+', '')
+    df_sap_codes_vs_chains['Distributor_alias'] = df_sap_codes_vs_chains['Distributor_alias'].str.lower()
     
-    return (True, [df_sap_codes_vs_chains])
+    return df_sap_codes_vs_chains
 
 
 def getting_corrected_sap_codes(df_automation, df_sap_codes_vs_chains):
@@ -176,39 +116,29 @@ def getting_corrected_sap_codes(df_automation, df_sap_codes_vs_chains):
     df_automation.reset_index(drop=True, inplace=True)
     df_sap_codes_vs_chains.reset_index(drop=True, inplace=True)
         
-    return (True, [df_automation, not_found_dist_ids])
+    return df_automation, not_found_dist_ids
 
 
 def sanitizing_dist_names(df_dist_names):
 
-    try:
-        df_dist_names['Distributor_country'] = df_dist_names['Distributor_country'].str.strip()
-        df_dist_names['Distributor_name'] = df_dist_names['Distributor_name'].str.strip()
-        df_dist_names['Distributor_Currency'] = df_dist_names['Distributor_Currency'].str.strip()
-        df_dist_names['Distributor_id'] = df_dist_names['Distributor_id'].str.strip()
+    for column in df_dist_names.columns:
+        df_dist_names[column].str.strip()
 
-        #Auxiliar column to be used as key
-        df_dist_names['Country_key'] = df_dist_names['Distributor_country'].str.lower()
-        df_dist_names['Dist_key'] = df_dist_names['Distributor_id']
-    except Exception as error:
-        print('{} - Error sanitizing_dist_names'.format(error))
-        return (False, [])
+    #Auxiliar column to be used as key
+    df_dist_names['Country_key'] = df_dist_names['Distributor_country'].str.lower()
+    df_dist_names['Dist_key'] = df_dist_names['Distributor_id']
     
-    return (True, [df_dist_names])
+    return df_dist_names
 
 
 def getting_corrected_countries(df_automation, df_dist_names):
 
-    try:
-        df_automation['temp_country_key'] = df_automation['Country']
-        df_automation['temp_dist_key'] = df_automation['Distributor_id']
-        df_automation.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
+    df_automation['temp_country_key'] = df_automation['Country']
+    df_automation['temp_dist_key'] = df_automation['Distributor_id']
+    df_automation.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
 
-        df_dist_names.set_index(['Country_key', 'Dist_key'], inplace=True)
-        df_dist_names = df_dist_names[~df_dist_names.index.duplicated(keep='first')]
-    except Exception as error:
-        print('{} - Error getting_corrected_countries - Cod: 01'.format(error))
-        return (False, [])
+    df_dist_names.set_index(['Country_key', 'Dist_key'], inplace=True)
+    df_dist_names = df_dist_names[~df_dist_names.index.duplicated(keep='first')]
 
     valid_automation_distributors = list()
     not_valid_distributors = list()
@@ -221,34 +151,23 @@ def getting_corrected_countries(df_automation, df_dist_names):
         except KeyError as error:
             print('{}: {} - Distributor not Found Cod: 02'.format(error, single_key_automation_dist_and_country))
             not_valid_distributors.append(single_key_automation_dist_and_country)
-        except Exception as error:
-            print('{} - Error getting_corrected_countries'.format(error))
-            return (False, [])
     
     df_automation.reset_index(drop=True, inplace=True)
     df_dist_names.reset_index(drop=True, inplace=True)
-    return (True, [df_automation, valid_automation_distributors, not_valid_distributors])
+    return df_automation, valid_automation_distributors, not_valid_distributors
 
 
 def removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors):
 
-    try:
-        df_automation['temp_country_key'] = df_automation['Country']
-        df_automation['temp_dist_key'] = df_automation['Distributor_id']
-        df_automation.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
-    except Exception as error:
-        print('{} - Error removing_invalid_keys_of_df_automation: Cod01')
-        return (False, [])
+    df_automation['temp_country_key'] = df_automation['Country']
+    df_automation['temp_dist_key'] = df_automation['Distributor_id']
+    df_automation.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
 
-    try:
-        indexes_to_be_removed = pd.MultiIndex.from_tuples(not_valid_distributors)
-        df_automation.drop(indexes_to_be_removed, inplace=True)
-    except Exception as error:
-        print('{} - Error removing_invalid_keys_of_df_automation'.format(error))
-        return (False, [])
-    
+    indexes_to_be_removed = pd.MultiIndex.from_tuples(not_valid_distributors)
+    df_automation.drop(indexes_to_be_removed, inplace=True)
+
     df_automation.reset_index(drop=True, inplace=True)
-    return (True, [df_automation])
+    return df_automation
 
 
 def creating_new_skus_map_dataframe():
@@ -259,133 +178,103 @@ def creating_new_skus_map_dataframe():
     ]
 
     df_unmapped_skus = pd.DataFrame(columns=sku_map_columns)
-    return (True, [df_unmapped_skus])
+    return df_unmapped_skus
     
 
 def mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus):
 
-    try:
-        df_sku_map.set_index(['Distributor_SAP_Code', 'Distributor_SKU_Code'], inplace=True)
-        df_sku_map = df_sku_map[~df_sku_map.index.duplicated(keep='first')]
+    df_sku_map.set_index(['Distributor_SAP_Code', 'Distributor_SKU_Code'], inplace=True)
+    df_sku_map = df_sku_map[~df_sku_map.index.duplicated(keep='first')]
 
-        df_automation.set_index(['Distributor_id', 'Chain_Product_Code'], inplace=True)
-    except Exception as error:
-        print('{} - Error mapping_new_skus Cod: 01'.format(error))
-        return (False, [])
-    
-    try:
-        for single_key_automation in df_automation.index.unique():
-                if single_key_automation not in df_sku_map.index:
-                    dist_sap_code, dist_sku_code = single_key_automation
-                    lengh_df_unmapped_skus = len(df_unmapped_skus)
-                    df_unmapped_skus.loc[(lengh_df_unmapped_skus), 'Dist_SAP_Code'] = dist_sap_code
-                    df_unmapped_skus.loc[(lengh_df_unmapped_skus), 'Dist_SKU_Code'] = dist_sku_code
-        df_unmapped_skus['Multiplication_Factor'] = 1
-        df_unmapped_skus['Share_Participation'] = 1
-    except Exception as error:
-        print('{} - Error mapping_new_skus Cod: 02')
-        return (False, [])    
+    df_automation.set_index(['Distributor_id', 'Chain_Product_Code'], inplace=True)
+
+    for single_key_automation in df_automation.index.unique():
+            if single_key_automation not in df_sku_map.index:
+                dist_sap_code, dist_sku_code = single_key_automation
+                lengh_df_unmapped_skus = len(df_unmapped_skus)
+                df_unmapped_skus.loc[(lengh_df_unmapped_skus), 'Dist_SAP_Code'] = dist_sap_code
+                df_unmapped_skus.loc[(lengh_df_unmapped_skus), 'Dist_SKU_Code'] = dist_sku_code
+    df_unmapped_skus['Multiplication_Factor'] = 1
+    df_unmapped_skus['Share_Participation'] = 1
 
     df_automation.reset_index(inplace=True)
-    return (True, [df_automation, df_unmapped_skus])
+    return df_automation, df_unmapped_skus
 
 
 def splitting_sales_and_stock(df_automation):
 
-    try:
-        filt_sales = df_automation['Data_Type'] == 'sales'
-        df_automation_sales = df_automation[filt_sales]
+    filt_sales = df_automation['Data_Type'] == 'sales'
+    df_automation_sales = df_automation[filt_sales]
 
-        filt_stock = df_automation['Data_Type'] == 'stock'
-        df_automation_stock = df_automation[filt_stock]
-    except Exception as error:
-        print(error)
-        return (False, [])
-    
-    return (True, [df_automation_sales, df_automation_stock])
+    filt_stock = df_automation['Data_Type'] == 'stock'
+    df_automation_stock = df_automation[filt_stock]
+
+    return df_automation_sales, df_automation_stock
 
 
 def assigning_df_automation_to_df_sales(df_automation_sales, df_sales):
 
-    try:
-        df_sales['Country'] = df_automation_sales['Country']
-        df_sales['Diageo Customer ID'] = df_automation_sales['Distributor_id']
-        df_sales['Invoice Date'] = df_automation_sales['Invoice_Date']
-        df_sales['Store code'] = df_automation_sales['Store_Number']
-        df_sales['Product Code'] = df_automation_sales['Chain_Product_Code']
-        df_sales['Quantity'] = df_automation_sales['Quantity']
-        df_sales['Total Amount WITHOUT TAX'] = df_automation_sales['Sales_Without_Tax']
-        df_sales['Total Amount WITH TAX'] = df_automation_sales['Sales_With_Tax']
-    except Exception as error:
-        print('{} - error assigning_df_automation_to_df_sales'.format(error))
-        return (False, [])
+    df_sales['Country'] = df_automation_sales['Country']
+    df_sales['Diageo Customer ID'] = df_automation_sales['Distributor_id']
+    df_sales['Invoice Date'] = df_automation_sales['Invoice_Date']
+    df_sales['Store code'] = df_automation_sales['Store_Number']
+    df_sales['Product Code'] = df_automation_sales['Chain_Product_Code']
+    df_sales['Quantity'] = df_automation_sales['Quantity']
+    df_sales['Total Amount WITHOUT TAX'] = df_automation_sales['Sales_Without_Tax']
+    df_sales['Total Amount WITH TAX'] = df_automation_sales['Sales_With_Tax']
 
-    return (True, [df_sales])
+    return df_sales
 
 
 def assigning_df_automation_to_df_stock(df_automation_stock, df_stock):
 
-    try:
-        df_stock['Country'] = df_automation_stock['Country']
-        df_stock['Diageo Customer ID'] = df_automation_stock['Distributor_id']
-        df_stock['Invoice Date'] = df_automation_stock['Invoice_Date']
-        df_stock['Warehouse Number'] = df_automation_stock['Store_Number']
-        df_stock['Product Code'] = df_automation_stock['Chain_Product_Code']
-        df_stock['Quantity'] = df_automation_stock['Quantity']
-        df_stock['Warehouse'] = df_automation_stock['Store_Name']
-    except Exception as error:
-        print('{} - Error assigning_df_automation_to_df_stock'.format(error))
-        return (False, [])
+    df_stock['Country'] = df_automation_stock['Country']
+    df_stock['Diageo Customer ID'] = df_automation_stock['Distributor_id']
+    df_stock['Invoice Date'] = df_automation_stock['Invoice_Date']
+    df_stock['Warehouse Number'] = df_automation_stock['Store_Number']
+    df_stock['Product Code'] = df_automation_stock['Chain_Product_Code']
+    df_stock['Quantity'] = df_automation_stock['Quantity']
+    df_stock['Warehouse'] = df_automation_stock['Store_Name']
 
-    return (True, [df_stock])
+    return df_stock
 
 
 def sanitizing_sales_file(df_sales):
+
+    for column in df_sales.columns:
+        df_sales[column] = df_sales[column].str.strip()
+
+    #Removing negative sign from the end of the values (Some samples were found)
+    values_that_end_with_negative_sign_quantity = (df_sales['Quantity'].str[-1] == '-')
+    df_sales.loc[values_that_end_with_negative_sign_quantity, 'Quantity'] = '-' + df_sales.loc[values_that_end_with_negative_sign_quantity, 'Quantity'].str[:-1]
     
-    try:
-        #Striping columns
-        df_sales['Total Amount WITH TAX'] = df_sales['Total Amount WITH TAX'].str.strip()    
-        df_sales['Total Amount WITHOUT TAX'] = df_sales['Total Amount WITHOUT TAX'].str.strip()
-        df_sales['Quantity'] = df_sales['Quantity'].str.strip()
-
-        #Removing negative sign from the end of the values (Some samples were found)
-        values_that_end_with_negative_sign_quantity = (df_sales['Quantity'].str[-1] == '-')
-        df_sales.loc[values_that_end_with_negative_sign_quantity, 'Quantity'] = '-' + df_sales.loc[values_that_end_with_negative_sign_quantity, 'Quantity'].str[:-1]
-        
-        values_that_end_with_negative_sign_total_with_tax = (df_sales['Total Amount WITH TAX'].str[-1] == '-')
-        df_sales.loc[values_that_end_with_negative_sign_total_with_tax, 'Total Amount WITH TAX'] = '-' + df_sales.loc[values_that_end_with_negative_sign_total_with_tax, 'Total Amount WITH TAX'].str[:-1]
-        
-        values_that_end_with_negative_sign_total_without_tax = (df_sales['Total Amount WITHOUT TAX'].str[-1] == '-')
-        df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'] = '-' + df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'].str[:-1]
-
-        #Turning it numeric below quantities
-        df_sales['Quantity'] = pd.to_numeric(df_sales['Quantity'], errors='coerce').fillna(0)
-        df_sales['Total Amount WITH TAX'] = pd.to_numeric(df_sales['Total Amount WITH TAX'], errors='coerce').fillna(0)
-        df_sales['Total Amount WITHOUT TAX'] = pd.to_numeric(df_sales['Total Amount WITHOUT TAX'], errors='coerce').fillna(0)
+    values_that_end_with_negative_sign_total_with_tax = (df_sales['Total Amount WITH TAX'].str[-1] == '-')
+    df_sales.loc[values_that_end_with_negative_sign_total_with_tax, 'Total Amount WITH TAX'] = '-' + df_sales.loc[values_that_end_with_negative_sign_total_with_tax, 'Total Amount WITH TAX'].str[:-1]
     
-        df_sales = df_sales.fillna('')
-    except Exception as error:
-        print(error)
-        return (False, [])
+    values_that_end_with_negative_sign_total_without_tax = (df_sales['Total Amount WITHOUT TAX'].str[-1] == '-')
+    df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'] = '-' + df_sales.loc[values_that_end_with_negative_sign_total_without_tax, 'Total Amount WITHOUT TAX'].str[:-1]
 
-    return (True, [df_sales])
+    #Turning it numeric below quantities
+    df_sales['Quantity'] = pd.to_numeric(df_sales['Quantity'], errors='coerce').fillna(0).round(2)
+    df_sales['Total Amount WITH TAX'] = pd.to_numeric(df_sales['Total Amount WITH TAX'], errors='coerce').fillna(0).round(2)
+    df_sales['Total Amount WITHOUT TAX'] = pd.to_numeric(df_sales['Total Amount WITHOUT TAX'], errors='coerce').fillna(0).round(2)
+
+    df_sales = df_sales.fillna('')
+
+    return df_sales
         
 
 def filling_sales_information(df_sales, df_dist_names):
 
-    try:
-        df_sales['temp_country_key'] = df_sales['Country'].str.lower()
-        df_sales['temp_dist_key'] = df_sales['Diageo Customer ID']
-        df_sales.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
+    df_sales['temp_country_key'] = df_sales['Country'].str.lower()
+    df_sales['temp_dist_key'] = df_sales['Diageo Customer ID']
+    df_sales.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
 
-        #df_dist_names are already set and they are ['Country_key', 'Distributor_id']
-        df_dist_names = df_dist_names[~df_dist_names.index.duplicated(keep='first')]
+    #df_dist_names are already set and they are ['Country_key', 'Distributor_id']
+    df_dist_names = df_dist_names[~df_dist_names.index.duplicated(keep='first')]
 
-        #Hard-coding below column
-        df_sales['Unit of measure'] = 'BTL'
-    except Exception as error:
-        print('{} - Error when filling_sales_information Cod: 01'.format(error))
-        return (False, [])
+    #Hard-coding below column
+    df_sales['Unit of measure'] = 'BTL'
 
     for single_key_sales in df_sales.index.unique():
         try:
@@ -396,28 +285,22 @@ def filling_sales_information(df_sales, df_dist_names):
             df_sales.loc[(single_key_sales), 'Currency Code'] = currency
         except KeyError as error:
             print('{} - Distributor not found'.format(error))
-        except Exception as error:
-            print('{} - Error when filling_sales_information Cod: 02'.format(error))
-            return (False, [])
 
-    #Keeping the dist names and sales with index set - So not needed setting index again
+    #Keeping the dist names with index set - So not needed setting index again
 
     df_sales.reset_index(drop=True, inplace=True)
-    return (True, [df_sales])
+    return df_sales
 
 
 def filling_stock_information(df_stock, df_dist_names):
     
-    try:
-        df_stock['temp_country_key'] = df_stock['Country'].str.lower()
-        df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
-        df_stock.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
 
-        #Hard-coding below column
-        df_stock['Unit of measure'] = 'BTL'
-    except Exception as error:
-        print('{} - Error filling_stock_information Cod: 01'.format(error))
-        return (False, [])
+    df_stock['temp_country_key'] = df_stock['Country'].str.lower()
+    df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
+    df_stock.set_index(['temp_country_key', 'temp_dist_key'], inplace=True)
+
+    #Hard-coding below column
+    df_stock['Unit of measure'] = 'BTL'
 
     for single_key_stock in df_stock.index.unique():
         try:
@@ -425,27 +308,21 @@ def filling_stock_information(df_stock, df_dist_names):
             df_stock.loc[(single_key_stock), 'Diageo Customer Name'] = correct_dist_name
         except KeyError as error:
             print('{} - Stock - Distributor not found'.format(error))
-        except Exception as error:
-            print('{} - Error filling_stock_information Cod: 02'.format(error))
-            return (False, [])
 
     df_stock.reset_index(drop=True, inplace=True)
-    return (True, [df_stock])
+    return df_stock
 
 
 def getting_stock_store_names(df_stock, df_customer_catalogue):
 
-    try:
-        df_customer_catalogue.set_index(['Country', 'Distributor_id', 'Store_id'], inplace=True)
-        df_customer_catalogue = df_customer_catalogue[~df_customer_catalogue.index.duplicated(keep='first')]
+    df_customer_catalogue.set_index(['Country', 'Distributor_id', 'Store_id'], inplace=True)
+    df_customer_catalogue = df_customer_catalogue[~df_customer_catalogue.index.duplicated(keep='first')]
 
-        df_stock['temp_country_key'] = df_stock['Country']
-        df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
-        df_stock['temp_store_id'] = df_stock['Warehouse Number']
-        df_stock.set_index(['temp_country_key', 'temp_dist_key', 'temp_store_id'], inplace=True)
-    except Exception as error:
-        print('{} - Error getting_stock_store_names Cod: 01'.format(error))
-        return (False, [])
+    df_stock['temp_country_key'] = df_stock['Country']
+    df_stock['temp_dist_key'] = df_stock['Diageo Customer ID']
+    df_stock['temp_store_id'] = df_stock['Warehouse Number']
+    df_stock.set_index(['temp_country_key', 'temp_dist_key', 'temp_store_id'], inplace=True)
+
     
     for individual_stock_key in df_stock.index.unique():
         try:
@@ -454,10 +331,10 @@ def getting_stock_store_names(df_stock, df_customer_catalogue):
         except KeyError as error:
             print('{} - Store does not exist in customer catalogue file'.format(error))
         except Exception as error:
-            print('{} - getting_stock_store_names Cod: 02',format(error))
+            print('{} - getting_stock_store_names Cod: 02'.format(error))
     
     df_stock.reset_index(drop=True, inplace=True)
-    return (True, [df_stock])
+    return df_stock
 
 
 def creating_new_stores_dataframe():
@@ -470,54 +347,44 @@ def creating_new_stores_dataframe():
         'State or Region', 'Country', 'COU'
         ]
     df_new_stores_catalogue = pd.DataFrame(columns=new_stores_catalogue_columns)
-    return (True, [df_new_stores_catalogue])
+    return df_new_stores_catalogue
 
 
 def generating_list_of_unmapped_stores(df_automation, df_customer_catalogue):
 
-    try:
-        df_customer_catalogue.reset_index(inplace=True)
-    except Exception as error:
-        print('{} - Error generating_new_stores_df. Cod 01'.format(error))
-        return (False, [])
-    
-    try:
-        concatenated_indexes_with_store_name = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'] +';'+ df_automation['Store_Name'])
-        #Concatenating triple index in order to try to make 'if' condition lighter than multindex
-        concatenated_indexes_automation = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'])
-        list_of_all_stores_in_customer_catalogue = (df_customer_catalogue['Country'] +';'+ df_customer_catalogue['Distributor_id'] +';'+ df_customer_catalogue['Store_id']).unique().tolist()
-        indexes_df_unmapped_stores = ~concatenated_indexes_automation.isin(list_of_all_stores_in_customer_catalogue)
-        list_of_unmapped_stores = concatenated_indexes_with_store_name[indexes_df_unmapped_stores].unique()
-    except Exception as error:
-        print('{} - Error generating_new_stores_df. Cod 02'.format(error))
-        return (False, [])
+    df_customer_catalogue.reset_index(inplace=True)
+
+    concatenated_indexes_with_store_name = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'] +';'+ df_automation['Store_Name'])
+    #Concatenating triple index in order to try to make 'if' condition lighter than multindex
+    concatenated_indexes_automation = (df_automation['Country'] +';'+ df_automation['Distributor_id'] +';'+ df_automation['Store_Number'])
+    list_of_all_stores_in_customer_catalogue = (df_customer_catalogue['Country'] +';'+ df_customer_catalogue['Distributor_id'] +';'+ df_customer_catalogue['Store_id']).unique().tolist()
+    indexes_df_unmapped_stores = ~concatenated_indexes_automation.isin(list_of_all_stores_in_customer_catalogue)
+    list_of_unmapped_stores = concatenated_indexes_with_store_name[indexes_df_unmapped_stores].unique()
+
 
     df_automation.reset_index(inplace=True)
-    return (True, [list_of_unmapped_stores])
+    return list_of_unmapped_stores
 
 
 def generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores):
 
-    try:
-        for single_store in list_of_unmapped_stores:
-            forth_key_list = single_store.split(';')
-            country = forth_key_list[0]
-            distributor_id = forth_key_list[1]
-            store_number = forth_key_list[2]
-            store_name = forth_key_list[3]
+    for single_store in list_of_unmapped_stores:
+        forth_key_list = single_store.split(';')
+        country = forth_key_list[0]
+        distributor_id = forth_key_list[1]
+        store_number = forth_key_list[2]
+        store_name = forth_key_list[3]
 
-            lengh_df_new_stores_catalogue = len(df_new_stores_catalogue)
+        lengh_df_new_stores_catalogue = len(df_new_stores_catalogue)
 
-            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Country'] = country
-            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'SAP_Code'] = distributor_id
-            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Nbr'] = store_number
-            df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Name'] = store_name
-        df_new_stores_catalogue['COU'] = 0
-    except Exception as error:
-        print('{} - Error generating_new_stores_df'.format(error))
-        return (False, [])
+        df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Country'] = country
+        df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'SAP_Code'] = distributor_id
+        df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Nbr'] = store_number
+        df_new_stores_catalogue.loc[lengh_df_new_stores_catalogue, 'Store Name'] = store_name
+    df_new_stores_catalogue['COU'] = 0
 
-    return (True, [df_new_stores_catalogue])
+    return df_new_stores_catalogue
+
 
 def filling_df_new_stores_with_segmentation_customer_information(df_new_stores_catalogue, 
     df_segmentation_customer):
@@ -539,23 +406,18 @@ def filling_df_new_stores_with_segmentation_customer_information(df_new_stores_c
                 print('{} - Not possible assign the referred key to the column {}'.format(error, single_column))
 
     df_new_stores_catalogue.reset_index(drop=True, inplace=True)
-    return (True, [df_new_stores_catalogue])
+    return df_new_stores_catalogue
 
 
-def creating_folders(destination_path, valid_automation_distributors):
+def creating_folders(DESTINATION_PATH, valid_automation_distributors):
 
-    try:
-        os.chdir(destination_path)
-        for single_valid_dist in valid_automation_distributors:
-            country, dist_code = single_valid_dist
-            folder_name = country + '_' + dist_code
-            if not os.path.exists(folder_name):
-                os.mkdir(folder_name)
-    except Exception as error:
-        print('{} - Error creating_folders'.format(error))
-        return (False, [])
-    
-    return (True, [])
+    os.chdir(DESTINATION_PATH)
+    for single_valid_dist in valid_automation_distributors:
+        country, dist_code = single_valid_dist
+        folder_name = country + '_' + dist_code
+        if not os.path.exists(folder_name):
+            os.mkdir(folder_name)
+    return True
 
 
 def writing_files(df_to_be_written, folder_name, file_name, to_be_saved_on_root_directory):
@@ -570,7 +432,7 @@ def writing_files(df_to_be_written, folder_name, file_name, to_be_saved_on_root_
     df_to_be_written[df_to_be_written.columns].to_csv(final_file_path_name,
         encoding='mbcs', sep=';', columns=df_to_be_written.columns, index=False)
     
-    return (True, [])
+    return True
 
 
 def creating_df_not_found_distributors_df():
@@ -612,13 +474,9 @@ def generating_unmapped_skus_file(df_unmapped_skus):
 
 def generating_sales_files(df_sales):
 
-    try:
-        df_sales['Country_key'] = df_sales['Country']
-        df_sales['Dist_key'] = df_sales['Diageo Customer ID']
-        df_sales.set_index(['Country_key', 'Dist_key'], inplace=True)
-    except Exception as error:
-        print('{} - Error generating_sales_files Cod: 01')
-        sys.exit()
+    df_sales['Country_key'] = df_sales['Country']
+    df_sales['Dist_key'] = df_sales['Diageo Customer ID']
+    df_sales.set_index(['Country_key', 'Dist_key'], inplace=True)
 
     #Generating_All_Sales
     try:
@@ -642,28 +500,21 @@ def generating_sales_files(df_sales):
         except Exception as error:
             print('{} {} - Error. Not possible saving Sales file'.format(error, single_sales_key))
     
-    return (True, [])
+    return True
 
 
 def generating_stock_files(df_stock):
 
-    try:
-        df_stock['Country_key'] = df_stock['Country']
-        df_stock['Dist_key'] = df_stock['Diageo Customer ID']
-        df_stock.set_index(['Country_key', 'Dist_key'], inplace=True)
-    except Exception as error:
-        print('{} - Error generating_stock_files Cod: 01')
-        sys.exit()
+    df_stock['Country_key'] = df_stock['Country']
+    df_stock['Dist_key'] = df_stock['Diageo Customer ID']
+    df_stock.set_index(['Country_key', 'Dist_key'], inplace=True)
     
     #Generating_All_Stock
-    try:
-        All_stock_file_name = 'All_Stock'
-        folder_all_stock = ''
-        to_be_saved_on_root_directory = True
-        writing_files(df_stock, folder_all_stock, All_stock_file_name, to_be_saved_on_root_directory)
-    except Exception as error:
-        print('{} - Error. Not possible saving Stock file - ALL'.format(error))
-        return (False, [])
+    All_stock_file_name = 'All_Stock'
+    folder_all_stock = ''
+    to_be_saved_on_root_directory = True
+
+    writing_files(df_stock, folder_all_stock, All_stock_file_name, to_be_saved_on_root_directory)
 
     #Generating stock files by Country/Dist
     for single_stock_key in df_stock.index.unique():
@@ -677,17 +528,14 @@ def generating_stock_files(df_stock):
             writing_files(single_df_stock, folder_name, individual_stock_file_name, to_be_saved_on_root_directory)
         except Exception as error:
             print('{} {} - Error. Not possible saving Stock file'.format(error, single_stock_key))
-    return (True, [])
+    return True
+
 
 def generating_customer_catalogue_files(df_new_stores_catalogue):
 
-    try:
-        df_new_stores_catalogue['Country_key'] = df_new_stores_catalogue['Country']
-        df_new_stores_catalogue['Dist_key'] = df_new_stores_catalogue['SAP_Code']
-        df_new_stores_catalogue.set_index(['Country_key', 'Dist_key'], inplace=True)
-    except Exception as error:
-        print('{} - Error generating_customer_catalogue_files'.format(error))
-        return (False, [])
+    df_new_stores_catalogue['Country_key'] = df_new_stores_catalogue['Country']
+    df_new_stores_catalogue['Dist_key'] = df_new_stores_catalogue['SAP_Code']
+    df_new_stores_catalogue.set_index(['Country_key', 'Dist_key'], inplace=True)
     
     #Generating_All_customer
     try:
@@ -706,330 +554,183 @@ def generating_customer_catalogue_files(df_new_stores_catalogue):
         folder_name = country_name + '_' + distributor
         to_be_saved_on_root_directory = False
 
-        try:
-            writing_files(single_df_customer, folder_name, individual_customer_file_name, to_be_saved_on_root_directory)
-        except Exception as error:
-            print('{} {} - Not possible saving Customer_Catalogue file'.format(error, single_key_customer))
-            return (False, [])
-    return (True, [])
+        writing_files(single_df_customer, folder_name, individual_customer_file_name, to_be_saved_on_root_directory)
+
+    return True
 
 
 def main():
 
     try:
-        print('getting_destination_path')
-        success_getting_destination_path, content_getting_destination_path = getting_destination_path()
-    except Exception as error:
-        print('{} - Error getting_destination_path'.format(error))
-        sys.exit()
-    finally:
-        if success_getting_destination_path:
-            destination_path = content_getting_destination_path[0]
-        
-    try:
-        print('defining_paths')
-        success_defining_paths, content_defining_paths = defining_paths()
-    except Exception as error:
-        print('{} - Error defining_paths')
-        sys.exit()
-    finally:
-        if success_defining_paths:
-            automation_template_path = content_defining_paths[0]
-            customer_catalogue_path = content_defining_paths[1]
-            dist_names_path = content_defining_paths[2]
-            product_master_path = content_defining_paths[3]
-            sku_map_path = content_defining_paths[4]
-            segmentation_customer_path = content_defining_paths[5]
-        else:
-            sys.exit()
-
-    try:
         print('loading_frames')
-        success_loading_frames , content_loading_frames = loading_frames(automation_template_path, customer_catalogue_path, dist_names_path,
-            product_master_path, sku_map_path, segmentation_customer_path)
+        df_automation, df_customer_catalogue, df_dist_names, df_sku_map, df_sap_codes_vs_chains, df_segmentation_customer = loading_frames()
     except Exception as error:
         print('{} - Error loading_frames'.format(error))
-        sys.exit()
-    finally:
-        if success_loading_frames:
-            df_automation = content_loading_frames[0]
-            df_customer_catalogue = content_loading_frames[1]
-            df_dist_names = content_loading_frames[2]
-            df_sku_map = content_loading_frames[3]
-            df_sap_codes_vs_chains = content_loading_frames[4]
-            df_segmentation_customer = content_loading_frames[5]
-        else:
-            sys.exit()
+        sys.exit(1)
         
     try:
         print('declaring_sales_file_final_format')
-        success_declaring_sales_file_final_format, content_declaring_sales_file_final_format = declaring_sales_file_final_format()
+        df_sales = declaring_sales_file_final_format()
     except Exception as error:
         print('{} - Error declaring_sales_file_final_format'.format(error))
         sys.exit()
-    finally:
-        if success_declaring_sales_file_final_format:
-            df_sales = content_declaring_sales_file_final_format[0]
 
     try:
         print('declaring_stock_file_final_format')
-        success_declaring_stock_file_final_format , content_declaring_stock_file_final_format = declaring_stock_file_final_format()
+        df_stock = declaring_stock_file_final_format()
     except Exception as error:
         print('{} - Error declaring_stock_file_final_format'.format(error))
-        sys.exit()
-    finally:
-        if success_declaring_stock_file_final_format:
-            df_stock = content_declaring_stock_file_final_format[0]
+        sys.exit(1)
     
     try:
         print('sanitizing_df_automation')
-        success_sanitizing_df_automation , content_sanitizing_df_automation = sanitizing_df_automation(df_automation)
+        df_automation = sanitizing_df_automation(df_automation)
     except Exception as error:
         print('{} - Error sanitizing_df_automation'.format(error))
-        sys.exit()
-    finally:
-        if success_sanitizing_df_automation:
-            df_automation = content_sanitizing_df_automation[0]
-        else:
-            sys.exit()
+        sys.exit(1)
 
     try:
         print('df_automation_wrong_data_type_column_inputs')
-        success_df_automation_wrong_data_type_column_inputs , content_df_automation_wrong_data_type_column_inputs = df_automation_wrong_data_type_column_inputs(df_automation)
+        df_automation = df_automation_wrong_data_type_column_inputs(df_automation)
     except Exception as error:
         print('{} - Error df_automation_wrong_data_type_column_inputs')
-        sys.exit()
-    finally:
-        if success_df_automation_wrong_data_type_column_inputs:
-            df_automation = content_df_automation_wrong_data_type_column_inputs[0]
-        else:
-            sys.exit()
+        sys.exit(1)
 
     try:
         print('sanitizing_df_sap_codes_vs_chains')
-        success_sanitizing_df_sap_codes_vs_chains ,content_sanitizing_df_sap_codes_vs_chains = sanitizing_df_sap_codes_vs_chains(df_sap_codes_vs_chains)
+        df_sap_codes_vs_chains = sanitizing_df_sap_codes_vs_chains(df_sap_codes_vs_chains)
     except Exception as error:
         print('{} - Error sanitizing_df_sap_codes_vs_chains'.format(error))
-        sys.exit()
-    finally:
-        if success_sanitizing_df_sap_codes_vs_chains:
-            df_sap_codes_vs_chains = content_sanitizing_df_sap_codes_vs_chains[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('getting_corrected_sap_codes') 
-        success_getting_corrected_sap_codes, content_getting_corrected_sap_codes = getting_corrected_sap_codes(df_automation, df_sap_codes_vs_chains)
+        df_automation, _not_found_dist_ids = getting_corrected_sap_codes(df_automation, df_sap_codes_vs_chains)
     except Exception as error:
         print('{} - Error getting_corrected_sap_codes')
-        sys.exit()
-    finally:
-        if success_getting_corrected_sap_codes:
-            df_automation = content_getting_corrected_sap_codes[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('sanitizing_dist_names')
-        success_sanitizing_dist_names, content_sanitizing_dist_names = sanitizing_dist_names(df_dist_names)
+        df_dist_names = sanitizing_dist_names(df_dist_names)
     except Exception as error:
         print('{} - Error sanitizing_dist_names')
-        sys.exit()
-    finally:
-        if success_sanitizing_dist_names:
-            df_dist_names = content_sanitizing_dist_names[0]
-        else:
-            sys.exit()
+        sys.exit(1)
 
     try:
         print('getting_corrected_countries')
-        success_getting_corrected_countries, content_getting_corrected_countries = getting_corrected_countries(df_automation, df_dist_names)
+        df_automation, valid_automation_distributors, not_valid_distributors = getting_corrected_countries(df_automation, df_dist_names)
     except Exception as error:
         print('{} - Error getting_corrected_countries'.format(error))
-        sys.exit()
-    finally:
-        if success_getting_corrected_countries:
-            df_automation = content_getting_corrected_countries[0]
-            valid_automation_distributors = content_getting_corrected_countries[1]
-            not_valid_distributors = content_getting_corrected_countries[2]
-        else:
-            sys.exit()
+        sys.exit(1)
 
 
     if not_valid_distributors:
         try:
             print('removing_invalid_keys_of_df_automation')
-            success_removing_invalid_keys_of_df_automation, content_removing_invalid_keys_of_df_automation = removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors)
+            df_automation = removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors)
         except Exception as error:
             print('{} - Error removing_invalid_keys_of_df_automation'.format(error))
-            sys.exit()
-        finally:
-            if success_removing_invalid_keys_of_df_automation:
-                df_automation = content_removing_invalid_keys_of_df_automation[0]
-            else:
-                sys.exit()
+            sys.exit(1)
     
     try:
         print('creating_new_skus_map_dataframe')
-        success_creating_new_skus_map_dataframe, content_creating_new_skus_map_dataframe = creating_new_skus_map_dataframe()
+        df_unmapped_skus = creating_new_skus_map_dataframe()
     except Exception as error:
         print('{} - Error creating_new_skus_map_dataframe'.format(error))
-        sys.exit()
-    finally:
-        if success_creating_new_skus_map_dataframe:
-            df_unmapped_skus = content_creating_new_skus_map_dataframe[0]
+        sys.exit(1)
 
     try:
         print('mapping_new_skus')
-        success_mapping_new_skus, content_mapping_new_skus = mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus)
+        df_automation, df_unmapped_skus = mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus)
     except Exception as error:
         print('{} - Error mapping_new_skus'.format(error))
-        sys.exit()
-    finally:
-        if success_mapping_new_skus:
-            df_automation = content_mapping_new_skus[0]
-            df_unmapped_skus = content_mapping_new_skus[1]
-        else:
-            sys.exit()
+        sys.exit(1)
+
 
     try:
         print('splitting_sales_and_stock')
-        success_splitting_sales_and_stock, content_splitting_sales_and_stock = splitting_sales_and_stock(df_automation)
+        df_automation_sales, df_automation_stock = splitting_sales_and_stock(df_automation)
     except Exception as error:
         print('{} - Error splitting_sales_and_stock'.format(error))
-        sys.exit()
-    finally:
-        if success_splitting_sales_and_stock:
-            df_automation_sales = content_splitting_sales_and_stock[0]
-            df_automation_stock = content_splitting_sales_and_stock[1]
-        else:
-            sys.exit()
+        sys.exit(1)
 
     try:
         print('assigning_df_automation_to_df_sales')
-        success_assigning_df_automation_to_df_sales, content_assigning_df_automation_to_df_sales = assigning_df_automation_to_df_sales(df_automation_sales, df_sales)
+        df_sales = assigning_df_automation_to_df_sales(df_automation_sales, df_sales)
     except Exception as error:
         print('{} - Error assigning_df_automation_to_df_sales'.format(error))
-        sys.exit()
-    finally:
-        if success_assigning_df_automation_to_df_sales:
-            df_sales = content_assigning_df_automation_to_df_sales[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('assigning_df_automation_to_df_stock')
-        success_assigning_df_automation_to_df_stock, content_assigning_df_automation_to_df_stock = assigning_df_automation_to_df_stock(df_automation_stock, df_stock)
+        df_stock = assigning_df_automation_to_df_stock(df_automation_stock, df_stock)
     except Exception as error:
         print('{} - Error assigning_df_automation_to_df_stock')
-        sys.exit()
-    finally:
-        if success_assigning_df_automation_to_df_stock:
-            df_stock = content_assigning_df_automation_to_df_stock[0]
-        else:
-            sys.exit()
+        sys.exit(1)
 
     try:
         print('sanitizing_sales_file')
-        success_sanitizing_sales_file, content_sanitizing_sales_file = sanitizing_sales_file(df_sales)
+        df_sales = sanitizing_sales_file(df_sales)
     except Exception as error:
         print('{} - Error sanitizing_sales_file'.format(error))
-        sys.exit()
-    finally:
-        if success_sanitizing_sales_file:
-            df_sales = content_sanitizing_sales_file[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('filling_sales_information')
-        success_filling_sales_information, content_filling_sales_information = filling_sales_information(df_sales, df_dist_names)
+        df_sales = filling_sales_information(df_sales, df_dist_names)
     except Exception as error:
         print('{} - Error filling_sales_information'.format(error))
-        sys.exit()
-    finally:
-        if success_filling_sales_information:
-            df_sales = content_filling_sales_information[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('filling_stock_information')
-        success_filling_stock_information, content_filling_stock_information = filling_stock_information(df_stock, df_dist_names)
+        df_stock = filling_stock_information(df_stock, df_dist_names)
     except Exception as error:
         print('{} - Error filling_stock_information'.format(error))
-        sys.exit()
-    finally:
-        if success_filling_stock_information:
-            df_stock = content_filling_stock_information[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     try:
         print('getting_stock_store_names') 
-        success_getting_stock_store_names, content_getting_stock_store_names = getting_stock_store_names(df_stock, df_customer_catalogue)
+        df_stock = getting_stock_store_names(df_stock, df_customer_catalogue)
     except Exception as error:
         print('{} - Error getting_stock_store_names'.format(error))
-    finally:
-        if success_getting_stock_store_names:
-            df_stock = content_getting_stock_store_names[0]
-        else:
-            sys.exit()
 
     try:
         print('creating_new_stores_dataframe')
-        success_creating_new_stores_dataframe, content_creating_new_stores_dataframe = creating_new_stores_dataframe()
+        df_new_stores_catalogue = creating_new_stores_dataframe()
     except Exception as error:
         print('{} - Error creating_new_stores_dataframe')
-        sys.exit()
-    finally:
-        if success_creating_new_stores_dataframe:
-            df_new_stores_catalogue = content_creating_new_stores_dataframe[0]
+        sys.exit(1)
     
     try:
         print('generating_list_of_unmapped_stores')
-        success_generating_list_of_unmapped_stores, content_generating_list_of_unmapped_stores = generating_list_of_unmapped_stores(df_automation, df_customer_catalogue)
+        list_of_unmapped_stores = generating_list_of_unmapped_stores(df_automation, df_customer_catalogue)
     except Exception as error:
         print('{} - Error generating_list_of_unmapped_stores'.format(error))
-        sys.exit()
-    finally:
-        if success_generating_list_of_unmapped_stores:
-            list_of_unmapped_stores = content_generating_list_of_unmapped_stores[0]
-        else:
-            sys.exit()
+        sys.exit(1)
     
     if len(list_of_unmapped_stores) > 0:
         try:
             print('generating_new_stores_df')
-            success_generating_new_stores_df, content_generating_new_stores_df = generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores)
+            df_new_stores_catalogue = generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores)
         except Exception as error:
             print('{} - Error generating_new_stores_df'.format(error))
-            sys.exit()
-        finally:
-            if success_generating_new_stores_df:
-                df_new_stores_catalogue = content_generating_new_stores_df[0]
-            else:
-                sys.exit()
+            sys.exit(1)
         
         try:
             print('filling_df_new_stores_with_segmentation_customer_information')
-            success_filling_df_new_stores_with_segmentation_customer_information, content_filling_df_new_stores_with_segmentation_customer_information = filling_df_new_stores_with_segmentation_customer_information(
-                df_new_stores_catalogue, df_segmentation_customer)
+            df_new_stores_catalogue = filling_df_new_stores_with_segmentation_customer_information(df_new_stores_catalogue, df_segmentation_customer)
         except Exception as error:
             print('{} - Error generating_new_stores_df'.format(error))
-            sys.exit()
-        finally:
-            if success_filling_df_new_stores_with_segmentation_customer_information:
-                df_new_stores_catalogue = content_filling_df_new_stores_with_segmentation_customer_information[0]
-            else:
-                sys.exit()
+            sys.exit(1)
 
     try:
         print('creating_folders')
-        creating_folders(destination_path, valid_automation_distributors)
+        creating_folders(DESTINATION_PATH, valid_automation_distributors)
     except Exception as error:
         print('{} - Error creating_folders'.format(error))
-        sys.exit()
+        sys.exit(1)
     
     if (len(not_valid_distributors) > 0):
         try:
@@ -1061,7 +762,7 @@ def main():
             generating_sales_files(df_sales)
         except Exception as error:
             print('{} - Error generating_sales_files'.format(error))
-            sys.exit()
+            sys.exit(1)
 
     if (len(df_stock) > 0):
         try:
@@ -1069,19 +770,16 @@ def main():
             generating_stock_files(df_stock)
         except Exception as error:
             print('{} - Error generating_stock_files'.format(error))
-            sys.exit()
+            sys.exit(1)
     
     if (len(list_of_unmapped_stores) > 0):
         try:
             print('generating_customer_catalogue_files')
-            success_generating_customer_catalogue_files ,content_generating_customer_catalogue_files = generating_customer_catalogue_files(df_new_stores_catalogue)
+            generating_customer_catalogue_files(df_new_stores_catalogue)
         except Exception as error:
-            print('{} - Error generating_customer_catalogue_files')
-            sys.exit()
-        finally:
-            if success_generating_customer_catalogue_files:
-                print('Successfully executed')
-                input('')
+            print('{} - Error generating_customer_catalogue_files'.format(error))
+            sys.exit(1)
+    input('Successfully executed!')
 
 
 if __name__ == "__main__":
