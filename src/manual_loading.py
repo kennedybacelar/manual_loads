@@ -573,226 +573,232 @@ def main():
     except Exception as error:
         print('{} - Error loading_frames'.format(error))
         sys.exit(1)
-        
-    try:
-        print('declaring_sales_file_final_format')
-        df_sales = declaring_sales_file_final_format()
-    except Exception as error:
-        print('{} - Error declaring_sales_file_final_format'.format(error))
-        sys.exit()
-
-    try:
-        print('declaring_stock_file_final_format')
-        df_stock = declaring_stock_file_final_format()
-    except Exception as error:
-        print('{} - Error declaring_stock_file_final_format'.format(error))
-        sys.exit(1)
     
-    try:
-        print('sanitizing_df_automation')
-        df_automation = sanitizing_df_automation(df_automation)
-    except Exception as error:
-        print('{} - Error sanitizing_df_automation'.format(error))
-        sys.exit(1)
-
-    try:
-        print('df_automation_wrong_data_type_column_inputs')
-        df_automation = df_automation_wrong_data_type_column_inputs(df_automation)
-    except Exception as error:
-        print('{} - Error df_automation_wrong_data_type_column_inputs')
-        sys.exit(1)
-
-    try:
-        print('sanitizing_df_sap_codes_vs_chains')
-        df_sap_codes_vs_chains = sanitizing_df_sap_codes_vs_chains(df_sap_codes_vs_chains)
-    except Exception as error:
-        print('{} - Error sanitizing_df_sap_codes_vs_chains'.format(error))
-        sys.exit(1)
-    
-    try:
-        print('getting_corrected_sap_codes') 
-        df_automation, _not_found_dist_ids = getting_corrected_sap_codes(df_automation, df_sap_codes_vs_chains)
-    except Exception as error:
-        print('{} - Error getting_corrected_sap_codes')
-        sys.exit(1)
-    
-    try:
-        print('sanitizing_dist_names')
-        df_dist_names = sanitizing_dist_names(df_dist_names)
-    except Exception as error:
-        print('{} - Error sanitizing_dist_names')
-        sys.exit(1)
-
-    try:
-        print('getting_corrected_countries')
-        df_automation, valid_automation_distributors, not_valid_distributors = getting_corrected_countries(df_automation, df_dist_names)
-    except Exception as error:
-        print('{} - Error getting_corrected_countries'.format(error))
-        sys.exit(1)
-
-
-    if not_valid_distributors:
+    if len(df_automation) > 0:
         try:
-            print('removing_invalid_keys_of_df_automation')
-            df_automation = removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors)
+            print('declaring_sales_file_final_format')
+            df_sales = declaring_sales_file_final_format()
         except Exception as error:
-            print('{} - Error removing_invalid_keys_of_df_automation'.format(error))
-            sys.exit(1)
-    
-    try:
-        print('creating_new_skus_map_dataframe')
-        df_unmapped_skus = creating_new_skus_map_dataframe()
-    except Exception as error:
-        print('{} - Error creating_new_skus_map_dataframe'.format(error))
-        sys.exit(1)
+            print('{} - Error declaring_sales_file_final_format'.format(error))
+            sys.exit()
 
-    try:
-        print('mapping_new_skus')
-        df_automation, df_unmapped_skus = mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus)
-    except Exception as error:
-        print('{} - Error mapping_new_skus'.format(error))
-        sys.exit(1)
-
-
-    try:
-        print('splitting_sales_and_stock')
-        df_automation_sales, df_automation_stock = splitting_sales_and_stock(df_automation)
-    except Exception as error:
-        print('{} - Error splitting_sales_and_stock'.format(error))
-        sys.exit(1)
-
-    try:
-        print('assigning_df_automation_to_df_sales')
-        df_sales = assigning_df_automation_to_df_sales(df_automation_sales, df_sales)
-    except Exception as error:
-        print('{} - Error assigning_df_automation_to_df_sales'.format(error))
-        sys.exit(1)
-    
-    try:
-        print('assigning_df_automation_to_df_stock')
-        df_stock = assigning_df_automation_to_df_stock(df_automation_stock, df_stock)
-    except Exception as error:
-        print('{} - Error assigning_df_automation_to_df_stock')
-        sys.exit(1)
-
-    try:
-        print('sanitizing_sales_file')
-        df_sales = sanitizing_sales_file(df_sales)
-    except Exception as error:
-        print('{} - Error sanitizing_sales_file'.format(error))
-        sys.exit(1)
-    
-    try:
-        print('Sanitizing_stock_file')
-        df_stock = sanitizing_stock_file(df_stock)
-    except Exception as error:
-        print('{} - Error Sanitizing_sales_file'.format(error))
-        sys.exit(1)
-    
-    try:
-        print('filling_sales_information')
-        df_sales = filling_sales_information(df_sales, df_dist_names)
-    except Exception as error:
-        print('{} - Error filling_sales_information'.format(error))
-        sys.exit(1)
-    
-    try:
-        print('filling_stock_information')
-        df_stock = filling_stock_information(df_stock, df_dist_names)
-    except Exception as error:
-        print('{} - Error filling_stock_information'.format(error))
-        sys.exit(1)
-    
-    try:
-        print('getting_stock_store_names') 
-        df_stock = getting_stock_store_names(df_stock, df_customer_catalogue)
-    except Exception as error:
-        print('{} - Error getting_stock_store_names'.format(error))
-
-    try:
-        print('creating_new_stores_dataframe')
-        df_new_stores_catalogue = creating_new_stores_dataframe()
-    except Exception as error:
-        print('{} - Error creating_new_stores_dataframe')
-        sys.exit(1)
-    
-    try:
-        print('generating_list_of_unmapped_stores')
-        list_of_unmapped_stores = generating_list_of_unmapped_stores(df_automation, df_customer_catalogue)
-    except Exception as error:
-        print('{} - Error generating_list_of_unmapped_stores'.format(error))
-        sys.exit(1)
-    
-    if len(list_of_unmapped_stores) > 0:
         try:
-            print('generating_new_stores_df')
-            df_new_stores_catalogue = generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores)
+            print('declaring_stock_file_final_format')
+            df_stock = declaring_stock_file_final_format()
         except Exception as error:
-            print('{} - Error generating_new_stores_df'.format(error))
+            print('{} - Error declaring_stock_file_final_format'.format(error))
             sys.exit(1)
         
         try:
-            print('filling_df_new_stores_with_segmentation_customer_information')
-            df_new_stores_catalogue = filling_df_new_stores_with_segmentation_customer_information(df_new_stores_catalogue, df_segmentation_customer)
+            print('sanitizing_df_automation')
+            df_automation = sanitizing_df_automation(df_automation)
         except Exception as error:
-            print('{} - Error generating_new_stores_df'.format(error))
+            print('{} - Error sanitizing_df_automation'.format(error))
             sys.exit(1)
 
-    try:
-        print('creating_folders')
-        creating_folders(DESTINATION_PATH, valid_automation_distributors)
-    except Exception as error:
-        print('{} - Error creating_folders'.format(error))
-        sys.exit(1)
-    
-    if (len(not_valid_distributors) > 0):
         try:
-            print('creating_df_not_found_distributors_df')
-            success_creating_df_not_found_distributors_df, content_creating_df_not_found_distributors_df = creating_df_not_found_distributors_df()
+            print('df_automation_wrong_data_type_column_inputs')
+            df_automation = df_automation_wrong_data_type_column_inputs(df_automation)
         except Exception as error:
-            print('{} - Error creating_df_not_found_distributors_df'.format(error))
-        finally:
-            if success_creating_df_not_found_distributors_df:
-                df_not_found_distributors = content_creating_df_not_found_distributors_df[0]
-    
-        try:
-            print('generating_not_found_distributors_file')
-            generating_not_found_distributors_file(df_not_found_distributors, not_valid_distributors)
-        except Exception as error:
-            print('{} - Error generating_not_found_distributors_file')
-    
-
-    if (len(df_unmapped_skus) > 0):
-        try:
-            print('generating_unmapped_skus_file')
-            generating_unmapped_skus_file(df_unmapped_skus)
-        except Exception as error:
-            print('{} - Error generating_unmapped_skus_file')
-
-    if (len(df_sales) > 0):
-        try:
-            print('generating_sales_files')
-            generating_sales_files(df_sales)
-        except Exception as error:
-            print('{} - Error generating_sales_files'.format(error))
+            print('{} - Error df_automation_wrong_data_type_column_inputs')
             sys.exit(1)
 
-    if (len(df_stock) > 0):
         try:
-            print('generating_stock_files')
-            generating_stock_files(df_stock)
+            print('sanitizing_df_sap_codes_vs_chains')
+            df_sap_codes_vs_chains = sanitizing_df_sap_codes_vs_chains(df_sap_codes_vs_chains)
         except Exception as error:
-            print('{} - Error generating_stock_files'.format(error))
+            print('{} - Error sanitizing_df_sap_codes_vs_chains'.format(error))
             sys.exit(1)
-    
-    if (len(list_of_unmapped_stores) > 0):
+        
         try:
-            print('generating_customer_catalogue_files')
-            generating_customer_catalogue_files(df_new_stores_catalogue)
+            print('getting_corrected_sap_codes') 
+            df_automation, _not_found_dist_ids = getting_corrected_sap_codes(df_automation, df_sap_codes_vs_chains)
         except Exception as error:
-            print('{} - Error generating_customer_catalogue_files'.format(error))
+            print('{} - Error getting_corrected_sap_codes')
             sys.exit(1)
-    input('Successfully executed!')
+        
+        try:
+            print('sanitizing_dist_names')
+            df_dist_names = sanitizing_dist_names(df_dist_names)
+        except Exception as error:
+            print('{} - Error sanitizing_dist_names')
+            sys.exit(1)
+
+        try:
+            print('getting_corrected_countries')
+            df_automation, valid_automation_distributors, not_valid_distributors = getting_corrected_countries(df_automation, df_dist_names)
+        except Exception as error:
+            print('{} - Error getting_corrected_countries'.format(error))
+            sys.exit(1)
+
+
+        if not_valid_distributors:
+            try:
+                print('removing_invalid_keys_of_df_automation')
+                df_automation = removing_invalid_keys_of_df_automation(df_automation, not_valid_distributors)
+            except Exception as error:
+                print('{} - Error removing_invalid_keys_of_df_automation'.format(error))
+                sys.exit(1)
+        
+        try:
+            print('creating_new_skus_map_dataframe')
+            df_unmapped_skus = creating_new_skus_map_dataframe()
+        except Exception as error:
+            print('{} - Error creating_new_skus_map_dataframe'.format(error))
+            sys.exit(1)
+
+        try:
+            print('mapping_new_skus')
+            df_automation, df_unmapped_skus = mapping_new_skus(df_automation, df_sku_map, df_unmapped_skus)
+        except Exception as error:
+            print('{} - Error mapping_new_skus'.format(error))
+            sys.exit(1)
+
+
+        try:
+            print('splitting_sales_and_stock')
+            df_automation_sales, df_automation_stock = splitting_sales_and_stock(df_automation)
+        except Exception as error:
+            print('{} - Error splitting_sales_and_stock'.format(error))
+            sys.exit(1)
+
+        try:
+            print('assigning_df_automation_to_df_sales')
+            df_sales = assigning_df_automation_to_df_sales(df_automation_sales, df_sales)
+        except Exception as error:
+            print('{} - Error assigning_df_automation_to_df_sales'.format(error))
+            sys.exit(1)
+        
+        try:
+            print('assigning_df_automation_to_df_stock')
+            df_stock = assigning_df_automation_to_df_stock(df_automation_stock, df_stock)
+        except Exception as error:
+            print('{} - Error assigning_df_automation_to_df_stock')
+            sys.exit(1)
+
+        if (len(df_sales) > 0):
+            try:
+                print('sanitizing_sales_file')
+                df_sales = sanitizing_sales_file(df_sales)
+            except Exception as error:
+                print('{} - Error sanitizing_sales_file'.format(error))
+                sys.exit(1)
+            
+            try:
+                print('filling_sales_information')
+                df_sales = filling_sales_information(df_sales, df_dist_names)
+            except Exception as error:
+                print('{} - Error filling_sales_information'.format(error))
+                sys.exit(1)
+
+
+        if (len(df_stock) > 0):
+            try:
+                print('Sanitizing_stock_file')
+                df_stock = sanitizing_stock_file(df_stock)
+            except Exception as error:
+                print('{} - Error Sanitizing_sales_file'.format(error))
+                sys.exit(1)
+        
+            try:
+                print('filling_stock_information')
+                df_stock = filling_stock_information(df_stock, df_dist_names)
+            except Exception as error:
+                print('{} - Error filling_stock_information'.format(error))
+                sys.exit(1)
+        
+            try:
+                print('getting_stock_store_names') 
+                df_stock = getting_stock_store_names(df_stock, df_customer_catalogue)
+            except Exception as error:
+                print('{} - Error getting_stock_store_names'.format(error))
+
+        try:
+            print('creating_new_stores_dataframe')
+            df_new_stores_catalogue = creating_new_stores_dataframe()
+        except Exception as error:
+            print('{} - Error creating_new_stores_dataframe')
+            sys.exit(1)
+        
+        try:
+            print('generating_list_of_unmapped_stores')
+            list_of_unmapped_stores = generating_list_of_unmapped_stores(df_automation, df_customer_catalogue)
+        except Exception as error:
+            print('{} - Error generating_list_of_unmapped_stores'.format(error))
+            sys.exit(1)
+        
+        if len(list_of_unmapped_stores) > 0:
+            try:
+                print('generating_new_stores_df')
+                df_new_stores_catalogue = generating_new_stores_df(df_new_stores_catalogue, list_of_unmapped_stores)
+            except Exception as error:
+                print('{} - Error generating_new_stores_df'.format(error))
+                sys.exit(1)
+            
+            try:
+                print('filling_df_new_stores_with_segmentation_customer_information')
+                df_new_stores_catalogue = filling_df_new_stores_with_segmentation_customer_information(df_new_stores_catalogue, df_segmentation_customer)
+            except Exception as error:
+                print('{} - Error generating_new_stores_df'.format(error))
+                sys.exit(1)
+
+        try:
+            print('creating_folders')
+            creating_folders(DESTINATION_PATH, valid_automation_distributors)
+        except Exception as error:
+            print('{} - Error creating_folders'.format(error))
+            sys.exit(1)
+        
+        if (len(not_valid_distributors) > 0):
+            try:
+                print('creating_df_not_found_distributors_df')
+                success_creating_df_not_found_distributors_df, content_creating_df_not_found_distributors_df = creating_df_not_found_distributors_df()
+            except Exception as error:
+                print('{} - Error creating_df_not_found_distributors_df'.format(error))
+            finally:
+                if success_creating_df_not_found_distributors_df:
+                    df_not_found_distributors = content_creating_df_not_found_distributors_df[0]
+        
+            try:
+                print('generating_not_found_distributors_file')
+                generating_not_found_distributors_file(df_not_found_distributors, not_valid_distributors)
+            except Exception as error:
+                print('{} - Error generating_not_found_distributors_file')
+        
+
+        if (len(df_unmapped_skus) > 0):
+            try:
+                print('generating_unmapped_skus_file')
+                generating_unmapped_skus_file(df_unmapped_skus)
+            except Exception as error:
+                print('{} - Error generating_unmapped_skus_file')
+
+        if (len(df_sales) > 0):
+            try:
+                print('generating_sales_files')
+                generating_sales_files(df_sales)
+            except Exception as error:
+                print('{} - Error generating_sales_files'.format(error))
+                sys.exit(1)
+
+        if (len(df_stock) > 0):
+            try:
+                print('generating_stock_files')
+                generating_stock_files(df_stock)
+            except Exception as error:
+                print('{} - Error generating_stock_files'.format(error))
+                sys.exit(1)
+        
+        if (len(list_of_unmapped_stores) > 0):
+            try:
+                print('generating_customer_catalogue_files')
+                generating_customer_catalogue_files(df_new_stores_catalogue)
+            except Exception as error:
+                print('{} - Error generating_customer_catalogue_files'.format(error))
+                sys.exit(1)
+        input('Successfully executed!')
+    else:
+        input('Automation template empty')
 
 
 if __name__ == "__main__":
