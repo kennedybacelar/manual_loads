@@ -262,6 +262,12 @@ def sanitizing_sales_file(df_sales):
     df_sales = df_sales.fillna('')
 
     return df_sales
+
+
+def sanitizing_stock_file(df_stock):
+
+    df_stock['Quantity'] = pd.to_numeric(df_stock['Quantity'],errors='coerce').fillna(0)
+    return df_stock
         
 
 def filling_sales_information(df_sales, df_dist_names):
@@ -674,6 +680,13 @@ def main():
         df_sales = sanitizing_sales_file(df_sales)
     except Exception as error:
         print('{} - Error sanitizing_sales_file'.format(error))
+        sys.exit(1)
+    
+    try:
+        print('Sanitizing_stock_file')
+        df_stock = sanitizing_stock_file(df_stock)
+    except Exception as error:
+        print('{} - Error Sanitizing_sales_file'.format(error))
         sys.exit(1)
     
     try:
